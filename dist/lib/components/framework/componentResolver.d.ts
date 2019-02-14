@@ -1,10 +1,9 @@
-// Type definitions for ag-grid-community v19.1.1
+// Type definitions for ag-grid-community v20.0.0
 // Project: http://www.ag-grid.com/
 // Definitions by: Niall Crosby <https://github.com/ag-grid/>
 import { GridOptions } from "../../entities/gridOptions";
 import { IComponent } from "../../interfaces/iComponent";
 import { ColDef, ColGroupDef } from "../../entities/colDef";
-import { Promise } from "../../utils";
 import { AgGridRegisteredComponentInput } from "./componentProvider";
 import { ISetFilterParams } from "../../interfaces/iSetFilterParams";
 import { IRichCellEditorParams } from "../../interfaces/iRichCellEditorParams";
@@ -13,8 +12,9 @@ import { Column } from "../../entities/column";
 import { GridApi } from "../../gridApi";
 import { ColumnApi } from "../../columnController/columnApi";
 import { ToolPanelDef } from "../../entities/sideBar";
+import { Promise } from "../../utils";
 export declare type ComponentHolder = GridOptions | ColDef | ColGroupDef | ISetFilterParams | IRichCellEditorParams | ToolPanelDef;
-export declare type AgComponentPropertyInput<A extends IComponent<any>> = AgGridRegisteredComponentInput<A> | string;
+export declare type AgComponentPropertyInput<A extends IComponent<any>> = AgGridRegisteredComponentInput<A> | string | boolean;
 export declare enum ComponentType {
     AG_GRID = 0,
     FRAMEWORK = 1
@@ -77,7 +77,7 @@ export declare class ComponentResolver {
      *      invoked
      *  @param defaultComponentName: The name of the component to load if there is no component specified
      */
-    getComponentToUse<A extends IComponent<any> & B, B>(holder: ComponentHolder, propertyName: string, dynamicComponentParams: DynamicComponentParams, defaultComponentName?: string): ResolvedComponent<A, B>;
+    getComponentToUse<A extends IComponent<any> & B, B>(holder: ComponentHolder, propertyName: string, dynamicComponentParams: DynamicComponentParams | null, defaultComponentName?: string): ResolvedComponent<A, B>;
     private resolveByName;
     /**
      * Useful to check what would be the resultant params for a given object
@@ -108,7 +108,7 @@ export declare class ComponentResolver {
      *  @param customInitParamsCb: A chance to customise the params passed to the init method. It receives what the current
      *  params are and the component that init is about to get called for
      */
-    createAgGridComponent<A extends IComponent<any>>(holderOpt: ComponentHolder, agGridParams: any, propertyName: string, dynamicComponentParams: DynamicComponentParams, defaultComponentName?: string, mandatory?: boolean, customInitParamsCb?: (params: any, component: A) => any): Promise<A>;
+    createAgGridComponent<A extends IComponent<any>>(holderOpt: ComponentHolder, agGridParams: any, propertyName: string, dynamicComponentParams: DynamicComponentParams | null, defaultComponentName?: string, mandatory?: boolean, customInitParamsCb?: (params: any, component: A) => any): Promise<A>;
     /**
      * This method creates a component given everything needed to guess what sort of component needs to be instantiated
      * It takes
@@ -124,4 +124,3 @@ export declare class ComponentResolver {
     private newAgGridComponent;
     private initialiseComponent;
 }
-//# sourceMappingURL=componentResolver.d.ts.map

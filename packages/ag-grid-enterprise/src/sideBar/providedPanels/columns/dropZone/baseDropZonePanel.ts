@@ -1,26 +1,25 @@
 import {
-    Utils,
-    HDirection,
-    VDirection,
+    Column,
     Component,
-    EventService,
-    GridOptionsWrapper,
     Context,
-    LoggerFactory,
     DragAndDropService,
-    Logger,
+    DraggingEvent,
+    DragSourceType,
     DropTarget,
     Events,
-    DraggingEvent,
-    Column,
-    DragSourceType,
+    EventService,
+    GridOptionsWrapper,
+    HDirection,
+    Logger,
+    LoggerFactory,
+    VDirection,
     _
 } from "ag-grid-community/main";
-import {DropZoneColumnComp} from "./dropZoneColumnComp";
+import { DropZoneColumnComp } from "./dropZoneColumnComp";
 
 export interface BaseDropZonePanelParams {
-    dragAndDropIcon:string;
-    emptyMessage:string;
+    dragAndDropIcon: string;
+    emptyMessage: string;
     title: string;
     icon: HTMLElement;
 }
@@ -51,7 +50,7 @@ export abstract class BaseDropZonePanel extends Component {
     // the columns to be dropped go in here
     private potentialDndColumns: Column[];
 
-    private guiDestroyFunctions: (()=>void)[] = [];
+    private guiDestroyFunctions: (() => void)[] = [];
 
     private params: BaseDropZonePanelParams;
     private beans: BaseDropZonePanelBeans;
@@ -69,12 +68,15 @@ export abstract class BaseDropZonePanel extends Component {
     private eColumnDropList: HTMLElement;
 
     protected abstract isColumnDroppable(column: Column): boolean;
+
     protected abstract updateColumns(columns: Column[]): void;
+
     protected abstract getExistingColumns(): Column[];
+
     protected abstract getIconName(): string;
 
     constructor(horizontal: boolean, valueColumn: boolean, name: string) {
-        super(`<div class="ag-column-drop ag-font-style ag-column-drop-${horizontal?'horizontal':'vertical'} ag-column-drop-${name}"></div>`);
+        super(`<div class="ag-column-drop ag-font-style ag-column-drop-${horizontal ? 'horizontal' : 'vertical'} ag-column-drop-${name}"></div>`);
         this.horizontal = horizontal;
         this.valueColumn = valueColumn;
 
@@ -95,11 +97,11 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private destroyGui(): void {
-        this.guiDestroyFunctions.forEach( (func) => func() );
+        this.guiDestroyFunctions.forEach((func) => func());
         this.guiDestroyFunctions.length = 0;
         this.childColumnComponents.length = 0;
-        Utils.removeAllChildren(this.getGui());
-        Utils.removeAllChildren(this.eColumnDropList);
+        _.removeAllChildren(this.getGui());
+        _.removeAllChildren(this.eColumnDropList);
     }
 
     public init(params: BaseDropZonePanelParams): void {
@@ -145,11 +147,11 @@ export abstract class BaseDropZonePanel extends Component {
         }
 
         // <0 happens when drag is no a direction we are interested in, eg drag is up/down but in horizontal panel
-        if (newIndex<0) {
+        if (newIndex < 0) {
             return false;
         }
 
-        let changed = newIndex!==this.insertIndex;
+        const changed = newIndex !== this.insertIndex;
         if (changed) {
             this.insertIndex = newIndex;
         }
@@ -158,19 +160,21 @@ export abstract class BaseDropZonePanel extends Component {
 
     private getNewHorizontalInsertIndex(draggingEvent: DraggingEvent): number {
 
-        if (Utils.missing(draggingEvent.hDirection)) { return -1; }
+        if (_.missing(draggingEvent.hDirection)) {
+            return -1;
+        }
 
         let newIndex = 0;
-        let mouseEvent = draggingEvent.event;
+        const mouseEvent = draggingEvent.event;
 
-        let enableRtl = this.beans.gridOptionsWrapper.isEnableRtl();
-        let goingLeft = draggingEvent.hDirection===HDirection.Left;
-        let mouseX = mouseEvent.clientX;
+        const enableRtl = this.beans.gridOptionsWrapper.isEnableRtl();
+        const goingLeft = draggingEvent.hDirection === HDirection.Left;
+        const mouseX = mouseEvent.clientX;
 
-        this.childColumnComponents.forEach( childColumn => {
-            let rect = childColumn.getGui().getBoundingClientRect();
-            let rectX = goingLeft ? rect.right : rect.left;
-            let horizontalFit = enableRtl ? (mouseX <= rectX) : (mouseX >= rectX);
+        this.childColumnComponents.forEach(childColumn => {
+            const rect = childColumn.getGui().getBoundingClientRect();
+            const rectX = goingLeft ? rect.right : rect.left;
+            const horizontalFit = enableRtl ? (mouseX <= rectX) : (mouseX >= rectX);
             if (horizontalFit) {
                 newIndex++;
             }
@@ -181,20 +185,22 @@ export abstract class BaseDropZonePanel extends Component {
 
     private getNewVerticalInsertIndex(draggingEvent: DraggingEvent): number {
 
-        if (Utils.missing(draggingEvent.vDirection)) { return -1; }
+        if (_.missing(draggingEvent.vDirection)) {
+            return -1;
+        }
 
         let newIndex = 0;
-        let mouseEvent = draggingEvent.event;
+        const mouseEvent = draggingEvent.event;
 
-        this.childColumnComponents.forEach( childColumn => {
-            let rect = childColumn.getGui().getBoundingClientRect();
-            if (draggingEvent.vDirection===VDirection.Down) {
-                let verticalFit = mouseEvent.clientY >= rect.top;
+        this.childColumnComponents.forEach(childColumn => {
+            const rect = childColumn.getGui().getBoundingClientRect();
+            if (draggingEvent.vDirection === VDirection.Down) {
+                const verticalFit = mouseEvent.clientY >= rect.top;
                 if (verticalFit) {
                     newIndex++;
                 }
             } else {
-                let verticalFit = mouseEvent.clientY >= rect.bottom;
+                const verticalFit = mouseEvent.clientY >= rect.bottom;
                 if (verticalFit) {
                     newIndex++;
                 }
@@ -205,11 +211,13 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private checkDragStartedBySelf(draggingEvent: DraggingEvent): void {
-        if (this.state!==BaseDropZonePanel.STATE_NOT_DRAGGING) { return; }
+        if (this.state !== BaseDropZonePanel.STATE_NOT_DRAGGING) {
+            return;
+        }
 
         this.state = BaseDropZonePanel.STATE_REARRANGE_COLUMNS;
 
-        this.potentialDndColumns = draggingEvent.dragSource.dragItemCallback().columns;
+        this.potentialDndColumns = draggingEvent.dragSource.dragItemCallback().columns || [];
         this.refreshGui();
 
         this.checkInsertIndex(draggingEvent);
@@ -219,7 +227,7 @@ export abstract class BaseDropZonePanel extends Component {
     private onDragging(draggingEvent: DraggingEvent): void {
         this.checkDragStartedBySelf(draggingEvent);
 
-        let positionChanged = this.checkInsertIndex(draggingEvent);
+        const positionChanged = this.checkInsertIndex(draggingEvent);
         if (positionChanged) {
             this.refreshGui();
         }
@@ -228,13 +236,13 @@ export abstract class BaseDropZonePanel extends Component {
     private onDragEnter(draggingEvent: DraggingEvent): void {
 
         // this will contain all columns that are potential drops
-        let dragColumns: Column[] = draggingEvent.dragSource.dragItemCallback().columns;
+        const dragColumns: Column[] = draggingEvent.dragSource.dragItemCallback().columns || [];
         this.state = BaseDropZonePanel.STATE_NEW_COLUMNS_IN;
 
         // take out columns that are not groupable
-        let goodDragColumns = Utils.filter(dragColumns, this.isColumnDroppable.bind(this) );
+        const goodDragColumns = _.filter(dragColumns, this.isColumnDroppable.bind(this));
 
-        let weHaveColumnsToDrag = goodDragColumns.length > 0;
+        const weHaveColumnsToDrag = goodDragColumns.length > 0;
         if (weHaveColumnsToDrag) {
             this.potentialDndColumns = goodDragColumns;
             this.checkInsertIndex(draggingEvent);
@@ -243,20 +251,20 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     protected isPotentialDndColumns(): boolean {
-        return Utils.existsAndNotEmpty(this.potentialDndColumns);
+        return _.existsAndNotEmpty(this.potentialDndColumns);
     }
 
     private onDragLeave(draggingEvent: DraggingEvent): void {
         // if the dragging started from us, we remove the group, however if it started
         // someplace else, then we don't, as it was only 'asking'
 
-        if (this.state===BaseDropZonePanel.STATE_REARRANGE_COLUMNS) {
-            let columns = draggingEvent.dragSource.dragItemCallback().columns;
+        if (this.state === BaseDropZonePanel.STATE_REARRANGE_COLUMNS) {
+            const columns = draggingEvent.dragSource.dragItemCallback().columns || [];
             this.removeColumns(columns);
         }
 
-        if (this.potentialDndColumns) {
-            this.potentialDndColumns = null;
+        if (this.isPotentialDndColumns()) {
+            this.potentialDndColumns = [];
             this.refreshGui();
         }
 
@@ -264,7 +272,7 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private onDragStop(): void {
-        if (this.potentialDndColumns) {
+        if (this.isPotentialDndColumns()) {
             let success: boolean;
             if (this.state === BaseDropZonePanel.STATE_NEW_COLUMNS_IN) {
                 this.addColumns(this.potentialDndColumns);
@@ -272,7 +280,7 @@ export abstract class BaseDropZonePanel extends Component {
             } else {
                 success = this.rearrangeColumns(this.potentialDndColumns);
             }
-            this.potentialDndColumns = null;
+            this.potentialDndColumns = [];
             // if the function is passive, then we don't refresh, as we assume the client application
             // is going to call setRowGroups / setPivots / setValues at a later point which will then
             // cause a refresh. this gives a nice gui where the ghost stays until the app has caught
@@ -293,21 +301,21 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private removeColumns(columnsToRemove: Column[]): void {
-        let newColumnList = this.getExistingColumns().slice();
-        columnsToRemove.forEach( column => Utils.removeFromArray(newColumnList, column) );
+        const newColumnList = this.getExistingColumns().slice();
+        columnsToRemove.forEach(column => _.removeFromArray(newColumnList, column));
         this.updateColumns(newColumnList);
     }
 
     private addColumns(columnsToAdd: Column[]): void {
-        let newColumnList = this.getExistingColumns().slice();
-        Utils.insertArrayIntoArray(newColumnList, columnsToAdd, this.insertIndex);
+        const newColumnList = this.getExistingColumns().slice();
+        _.insertArrayIntoArray(newColumnList, columnsToAdd, this.insertIndex);
         this.updateColumns(newColumnList);
     }
 
     private rearrangeColumns(columnsToAdd: Column[]): boolean {
-        let newColumnList = this.getNonGhostColumns().slice();
-        Utils.insertArrayIntoArray(newColumnList, columnsToAdd, this.insertIndex);
-        let noChangeDetected = Utils.shallowCompare(newColumnList, this.getExistingColumns());
+        const newColumnList = this.getNonGhostColumns().slice();
+        _.insertArrayIntoArray(newColumnList, columnsToAdd, this.insertIndex);
+        const noChangeDetected = _.shallowCompare(newColumnList, this.getExistingColumns());
         if (noChangeDetected) {
             return false;
         } else {
@@ -324,7 +332,7 @@ export abstract class BaseDropZonePanel extends Component {
         // out the list which sets scroll to zero. so the user could be just
         // reordering the list - we want to prevent the resetting of the scroll.
         // this is relevant for vertical display only (as horizontal has no scroll)
-        let scrollTop = this.eColumnDropList.scrollTop;
+        const scrollTop = this.eColumnDropList.scrollTop;
 
         this.destroyGui();
 
@@ -338,10 +346,10 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private getNonGhostColumns(): Column[] {
-        let existingColumns = this.getExistingColumns();
+        const existingColumns = this.getExistingColumns();
         let nonGhostColumns: Column[];
-        if (Utils.exists(this.potentialDndColumns)) {
-            nonGhostColumns = Utils.filter(existingColumns, column => this.potentialDndColumns.indexOf(column) < 0 );
+        if (this.isPotentialDndColumns()) {
+            nonGhostColumns = _.filter(existingColumns, column => this.potentialDndColumns.indexOf(column) < 0);
         } else {
             nonGhostColumns = existingColumns;
         }
@@ -349,35 +357,39 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private addColumnsToGui(): void {
-        let nonGhostColumns = this.getNonGhostColumns();
+        const nonGhostColumns = this.getNonGhostColumns();
 
-        let itemsToAddToGui: DropZoneColumnComp[] = [];
+        const itemsToAddToGui: DropZoneColumnComp[] = [];
 
-        let addingGhosts = Utils.exists(this.potentialDndColumns);
+        const addingGhosts = this.isPotentialDndColumns();
 
-        nonGhostColumns.forEach( (column: Column, index: number) => {
-            if (addingGhosts && index >= this.insertIndex) { return; }
-            let columnComponent = this.createColumnComponent(column, false);
+        nonGhostColumns.forEach((column: Column, index: number) => {
+            if (addingGhosts && index >= this.insertIndex) {
+                return;
+            }
+            const columnComponent = this.createColumnComponent(column, false);
             itemsToAddToGui.push(columnComponent);
         });
 
-        if (this.potentialDndColumns) {
-            this.potentialDndColumns.forEach( (column) => {
-                let columnComponent = this.createColumnComponent(column, true);
+        if (this.isPotentialDndColumns()) {
+            this.potentialDndColumns.forEach((column) => {
+                const columnComponent = this.createColumnComponent(column, true);
                 itemsToAddToGui.push(columnComponent);
-            } );
+            });
 
-            nonGhostColumns.forEach( (column: Column, index: number) => {
-                if (index < this.insertIndex) { return; }
-                let columnComponent = this.createColumnComponent(column, false);
+            nonGhostColumns.forEach((column: Column, index: number) => {
+                if (index < this.insertIndex) {
+                    return;
+                }
+                const columnComponent = this.createColumnComponent(column, false);
                 itemsToAddToGui.push(columnComponent);
             });
         }
 
         this.getGui().appendChild(this.eColumnDropList);
 
-        itemsToAddToGui.forEach( (columnComponent: DropZoneColumnComp, index: number) => {
-            let needSeparator = index!==0;
+        itemsToAddToGui.forEach((columnComponent: DropZoneColumnComp, index: number) => {
+            const needSeparator = index !== 0;
             if (needSeparator) {
                 this.addArrow(this.eColumnDropList);
             }
@@ -387,10 +399,10 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private createColumnComponent(column: Column, ghost: boolean): DropZoneColumnComp {
-        let columnComponent = new DropZoneColumnComp(column, this.dropTarget, ghost, this.valueColumn);
+        const columnComponent = new DropZoneColumnComp(column, this.dropTarget, ghost, this.valueColumn);
         columnComponent.addEventListener(DropZoneColumnComp.EVENT_COLUMN_REMOVE, this.removeColumns.bind(this, [column]));
         this.beans.context.wireBean(columnComponent);
-        this.guiDestroyFunctions.push( ()=> columnComponent.destroy() );
+        this.guiDestroyFunctions.push(() => columnComponent.destroy());
 
         if (!ghost) {
             this.childColumnComponents.push(columnComponent);
@@ -400,21 +412,21 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private addIconAndTitleToGui(): void {
-        let iconFaded = this.horizontal && this.isExistingColumnsEmpty();
+        const iconFaded = this.horizontal && this.isExistingColumnsEmpty();
 
-        let eGroupIcon = this.params.icon;
-        let eContainer = document.createElement('div');
+        const eGroupIcon = this.params.icon;
+        const eContainer = document.createElement('div');
 
-        Utils.addCssClass(eGroupIcon, 'ag-column-drop-icon');
-        Utils.addOrRemoveCssClass(eGroupIcon, 'ag-faded', iconFaded);
+        _.addCssClass(eGroupIcon, 'ag-column-drop-icon');
+        _.addOrRemoveCssClass(eGroupIcon, 'ag-faded', iconFaded);
 
         eContainer.appendChild(eGroupIcon);
 
         if (!this.horizontal) {
-            let eTitle = document.createElement('span');
+            const eTitle = document.createElement('span');
             eTitle.innerHTML = this.params.title;
-            Utils.addCssClass(eTitle, 'ag-column-drop-title');
-            Utils.addOrRemoveCssClass(eTitle, 'ag-faded', iconFaded);
+            _.addCssClass(eTitle, 'ag-column-drop-title');
+            _.addOrRemoveCssClass(eTitle, 'ag-faded', iconFaded);
             eContainer.appendChild(eTitle);
         }
 
@@ -426,12 +438,15 @@ export abstract class BaseDropZonePanel extends Component {
     }
 
     private addEmptyMessageToGui(): void {
-        let showEmptyMessage = this.isExistingColumnsEmpty() && !this.potentialDndColumns;
-        if (!showEmptyMessage) { return; }
+        const showEmptyMessage = this.isExistingColumnsEmpty() && !this.isPotentialDndColumns();
 
-        let eMessage = document.createElement('span');
+        if (!showEmptyMessage) {
+            return;
+        }
+
+        const eMessage = document.createElement('span');
         eMessage.innerHTML = this.params.emptyMessage;
-        Utils.addCssClass(eMessage, 'ag-column-drop-empty-message');
+        _.addCssClass(eMessage, 'ag-column-drop-empty-message');
         this.getGui().appendChild(eMessage);
     }
 
@@ -439,11 +454,11 @@ export abstract class BaseDropZonePanel extends Component {
         // only add the arrows if the layout is horizontal
         if (this.horizontal) {
             // for RTL it's a left arrow, otherwise it's a right arrow
-            let enableRtl = this.beans.gridOptionsWrapper.isEnableRtl();
-            let charCode = enableRtl ?
+            const enableRtl = this.beans.gridOptionsWrapper.isEnableRtl();
+            const charCode = enableRtl ?
                 BaseDropZonePanel.CHAR_LEFT_ARROW : BaseDropZonePanel.CHAR_RIGHT_ARROW;
-            let spanClass = enableRtl ? 'ag-left-arrow' : 'ag-right-arrow';
-            let eArrow = document.createElement('span');
+            const spanClass = enableRtl ? 'ag-left-arrow' : 'ag-right-arrow';
+            const eArrow = document.createElement('span');
 
             eArrow.className = spanClass;
             eArrow.innerHTML = charCode;

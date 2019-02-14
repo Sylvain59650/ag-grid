@@ -1,6 +1,6 @@
 /**
  * ag-grid-community - Advanced Data Grid / Data Table supporting Javascript / React / AngularJS / Web Components
- * @version v19.1.1
+ * @version v20.0.0
  * @link http://www.ag-grid.com/
  * @license MIT
  */
@@ -18,9 +18,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var context_1 = require("../context/context");
 var column_1 = require("../entities/column");
 var gridOptionsWrapper_1 = require("../gridOptionsWrapper");
-var utils_1 = require("../utils");
 var columnController_1 = require("./columnController");
 var columnFactory_1 = require("./columnFactory");
+var constants_1 = require("../constants");
+var utils_1 = require("../utils");
 var AutoGroupColService = /** @class */ (function () {
     function AutoGroupColService() {
     }
@@ -31,7 +32,7 @@ var AutoGroupColService = /** @class */ (function () {
         var doingTreeData = this.gridOptionsWrapper.isTreeData();
         var doingMultiAutoColumn = this.gridOptionsWrapper.isGroupMultiAutoColumn();
         if (doingTreeData && doingMultiAutoColumn) {
-            console.log('ag-Grid: you cannot mix groupMultiAutoColumn with treeData, only one column can be used to display groups when doing tree data');
+            console.warn('ag-Grid: you cannot mix groupMultiAutoColumn with treeData, only one column can be used to display groups when doing tree data');
             doingMultiAutoColumn = false;
         }
         // if doing groupMultiAutoColumn, then we call the method multiple times, once
@@ -42,7 +43,7 @@ var AutoGroupColService = /** @class */ (function () {
             });
         }
         else {
-            groupAutoColumns.push(this.createOneAutoGroupColumn(null));
+            groupAutoColumns.push(this.createOneAutoGroupColumn());
         }
         return groupAutoColumns;
     };
@@ -53,7 +54,7 @@ var AutoGroupColService = /** @class */ (function () {
         // if doing multi, set the field
         var colId;
         if (rowGroupCol) {
-            colId = AutoGroupColService_1.GROUP_AUTO_COLUMN_ID + "-" + rowGroupCol.getId();
+            colId = constants_1.Constants.GROUP_AUTO_COLUMN_ID + "-" + rowGroupCol.getId();
         }
         else {
             colId = AutoGroupColService_1.GROUP_AUTO_COLUMN_BUNDLE_ID;
@@ -68,11 +69,11 @@ var AutoGroupColService = /** @class */ (function () {
             // would not be able to work.
             var noFieldOrValueGetter = utils_1._.missing(defaultAutoColDef.field) && utils_1._.missing(defaultAutoColDef.valueGetter) && utils_1._.missing(defaultAutoColDef.filterValueGetter);
             if (noFieldOrValueGetter) {
-                defaultAutoColDef.suppressFilter = true;
+                defaultAutoColDef.filter = false;
             }
         }
         // if showing many cols, we don't want to show more than one with a checkbox for selection
-        if (index > 0) {
+        if (index && index > 0) {
             defaultAutoColDef.headerCheckboxSelection = false;
         }
         var newCol = new column_1.Column(defaultAutoColDef, null, colId, true);
@@ -115,8 +116,7 @@ var AutoGroupColService = /** @class */ (function () {
         return defaultAutoColDef;
     };
     var AutoGroupColService_1;
-    AutoGroupColService.GROUP_AUTO_COLUMN_ID = 'ag-Grid-AutoColumn';
-    AutoGroupColService.GROUP_AUTO_COLUMN_BUNDLE_ID = AutoGroupColService_1.GROUP_AUTO_COLUMN_ID;
+    AutoGroupColService.GROUP_AUTO_COLUMN_BUNDLE_ID = constants_1.Constants.GROUP_AUTO_COLUMN_ID;
     __decorate([
         context_1.Autowired('gridOptionsWrapper'),
         __metadata("design:type", gridOptionsWrapper_1.GridOptionsWrapper)

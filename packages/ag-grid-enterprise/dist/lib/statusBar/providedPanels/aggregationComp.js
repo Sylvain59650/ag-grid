@@ -1,4 +1,4 @@
-// ag-grid-enterprise v19.1.1
+// ag-grid-enterprise v20.0.0
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -6,7 +6,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -36,7 +36,7 @@ var AggregationComp = /** @class */ (function (_super) {
     };
     AggregationComp.prototype.postConstruct = function () {
         if (!this.isValidRowModel()) {
-            console.warn("ag-Grid: agSelectedRowCountComponent should only be used with the client and server side row model.");
+            console.warn("ag-Grid: agAggregationComponent should only be used with the client and server side row model.");
             return;
         }
         this.eventService.addEventListener(ag_grid_community_1.Events.EVENT_RANGE_SELECTION_CHANGED, this.onRangeSelectionChanged.bind(this));
@@ -45,13 +45,13 @@ var AggregationComp = /** @class */ (function (_super) {
     AggregationComp.prototype.isValidRowModel = function () {
         // this component is only really useful with client or server side rowmodels
         var rowModelType = this.gridApi.getModel().getType();
-        return rowModelType === 'clientSide' || rowModelType !== 'serverSide';
+        return rowModelType === 'clientSide' || rowModelType === 'serverSide';
     };
     AggregationComp.prototype.init = function () {
     };
     AggregationComp.prototype.setAggregationComponentValue = function (aggFuncName, value, visible) {
         var statusBarValueComponent = this.getAggregationValueComponent(aggFuncName);
-        if (ag_grid_community_1._.exists(statusBarValueComponent)) {
+        if (ag_grid_community_1._.exists(statusBarValueComponent) && statusBarValueComponent) {
             statusBarValueComponent.setValue(ag_grid_community_1._.formatNumberTwoDecimalPlacesAndCommas(value));
             statusBarValueComponent.setVisible(visible);
         }
@@ -62,8 +62,8 @@ var AggregationComp = /** @class */ (function (_super) {
         // if the user has specified the agAggregationPanelComp but no aggFuncs we show the all
         // if the user has specified the agAggregationPanelComp and aggFuncs, then we only show the aggFuncs listed
         var statusBarValueComponent = null;
-        var aggregationPanelConfig = ag_grid_community_1._.exists(this.gridOptions.statusBar) ? ag_grid_community_1._.find(this.gridOptions.statusBar.statusPanels, aggFuncName) : null;
-        if (ag_grid_community_1._.exists(aggregationPanelConfig)) {
+        var aggregationPanelConfig = ag_grid_community_1._.exists(this.gridOptions.statusBar) && this.gridOptions.statusBar ? ag_grid_community_1._.find(this.gridOptions.statusBar.statusPanels, aggFuncName) : null;
+        if (ag_grid_community_1._.exists(aggregationPanelConfig) && aggregationPanelConfig) {
             // a little defensive here - if no statusPanelParams show it, if componentParams we also expect aggFuncs
             if (!ag_grid_community_1._.exists(aggregationPanelConfig.statusPanelParams) ||
                 (ag_grid_community_1._.exists(aggregationPanelConfig.statusPanelParams) &&
@@ -87,9 +87,9 @@ var AggregationComp = /** @class */ (function (_super) {
         var count = 0;
         var numberCount = 0;
         var min = null;
-        var max = null;
+        var max = 0;
         var cellsSoFar = {};
-        if (!ag_grid_community_1._.missingOrEmpty(cellRanges)) {
+        if (cellRanges && !ag_grid_community_1._.missingOrEmpty(cellRanges)) {
             cellRanges.forEach(function (cellRange) {
                 // get starting and ending row, remember rowEnd could be before rowStart
                 var startRow = cellRange.start.getGridRow();
@@ -98,11 +98,14 @@ var AggregationComp = /** @class */ (function (_super) {
                 var currentRow = startRowIsFirst ? startRow : endRow;
                 var lastRow = startRowIsFirst ? endRow : startRow;
                 while (true) {
-                    var finishedAllRows = ag_grid_community_1._.missing(currentRow) || lastRow.before(currentRow);
-                    if (finishedAllRows) {
+                    var finishedAllRows = ag_grid_community_1._.missing(currentRow) || !currentRow || lastRow.before(currentRow);
+                    if (finishedAllRows || !currentRow || !cellRange.columns) {
                         break;
                     }
                     cellRange.columns.forEach(function (column) {
+                        if (currentRow === null) {
+                            return;
+                        }
                         // we only want to include each cell once, in case a cell is in multiple ranges
                         var cellId = currentRow.getGridCell(column).createId();
                         if (cellsSoFar[cellId]) {

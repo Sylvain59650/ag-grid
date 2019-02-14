@@ -1,5 +1,5 @@
-// ag-grid-enterprise v19.1.1
-import { ColDef, Column, ValueFormatterService, IRowModel } from "ag-grid-community";
+// ag-grid-enterprise v20.0.0
+import { ColDef, Column, IRowModel, ValueFormatterService } from "ag-grid-community";
 export declare enum SetFilterModelValuesType {
     PROVIDED_LIST = 0,
     PROVIDED_CB = 1,
@@ -41,8 +41,8 @@ export declare class SetFilterModel {
     private createAvailableUniqueValues;
     private sortValues;
     private getUniqueValues;
-    setMiniFilter(newMiniFilter: string): boolean;
-    getMiniFilter(): string;
+    setMiniFilter(newMiniFilter: string | null): boolean;
+    getMiniFilter(): string | null;
     private processMiniFilter;
     getDisplayedValueCount(): number;
     getDisplayedValue(index: any): any;
@@ -53,15 +53,14 @@ export declare class SetFilterModel {
     isFilterActive(): boolean;
     selectNothing(): void;
     getUniqueValueCount(): number;
-    getUniqueValue(index: any): string;
+    getUniqueValue(index: any): string | null;
     unselectValue(value: any): void;
     selectValue(value: any): void;
     isValueSelected(value: any): boolean;
     isEverythingSelected(): boolean;
     isNothingSelected(): boolean;
-    getModel(): string[];
-    setModel(model: string[], isSelectAll?: boolean): void;
+    getModel(): string[] | null;
+    setModel(model: string[] | null, isSelectAll?: boolean): void;
     private setSyncModel;
     onFilterValuesReady(callback: () => void): void;
 }
-//# sourceMappingURL=setFilterModel.d.ts.map

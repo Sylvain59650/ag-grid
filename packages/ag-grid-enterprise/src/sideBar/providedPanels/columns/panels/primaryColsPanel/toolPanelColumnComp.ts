@@ -17,14 +17,11 @@ import {
     EventService,
     GridApi,
     GridOptionsWrapper,
-    GridPanel,
     PostConstruct,
-    QuerySelector,
-    Utils,
     RefSelector,
     _
 } from "ag-grid-community/main";
-import {BaseColumnItem} from "./primaryColsPanel";
+import { BaseColumnItem } from "./primaryColsPanel";
 
 export class ToolPanelColumnComp extends Component implements BaseColumnItem {
 
@@ -49,10 +46,10 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
 
     private column: Column;
     private columnDept: number;
-    private selectionCallback: (selected:boolean)=>void;
+    private selectionCallback: (selected: boolean) => void;
 
     private allowDragging: boolean;
-    private displayName: string;
+    private displayName: string | null;
 
     private processingColumnStateChange = false;
     private groupsExist: boolean;
@@ -71,11 +68,11 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
         this.setTemplate(ToolPanelColumnComp.TEMPLATE);
 
         this.displayName = this.columnController.getDisplayNameForColumn(this.column, 'toolPanel');
-        let displayNameSanitised = _.escape(this.displayName);
+        const displayNameSanitised: any = _.escape(this.displayName);
         this.eLabel.innerHTML = displayNameSanitised;
 
         // if grouping, we add an extra level of indent, to cater for expand/contract icons we need to indent for
-        let indent = this.columnDept;
+        const indent = this.columnDept;
         if (this.groupsExist) {
             this.addCssClass('ag-toolpanel-add-group-indent');
         }
@@ -83,10 +80,10 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
 
         this.setupDragging();
 
-        this.addDestroyableEventListener(this.eventService, Events.EVENT_COLUMN_PIVOT_MODE_CHANGED, this.onColumnStateChanged.bind(this) );
-        this.addDestroyableEventListener(this.column, Column.EVENT_VALUE_CHANGED, this.onColumnStateChanged.bind(this) );
-        this.addDestroyableEventListener(this.column, Column.EVENT_PIVOT_CHANGED, this.onColumnStateChanged.bind(this) );
-        this.addDestroyableEventListener(this.column, Column.EVENT_ROW_GROUP_CHANGED, this.onColumnStateChanged.bind(this) );
+        this.addDestroyableEventListener(this.eventService, Events.EVENT_COLUMN_PIVOT_MODE_CHANGED, this.onColumnStateChanged.bind(this));
+        this.addDestroyableEventListener(this.column, Column.EVENT_VALUE_CHANGED, this.onColumnStateChanged.bind(this));
+        this.addDestroyableEventListener(this.column, Column.EVENT_PIVOT_CHANGED, this.onColumnStateChanged.bind(this));
+        this.addDestroyableEventListener(this.column, Column.EVENT_ROW_GROUP_CHANGED, this.onColumnStateChanged.bind(this));
         this.addDestroyableEventListener(this.column, Column.EVENT_VISIBLE_CHANGED, this.onColumnStateChanged.bind(this));
 
         this.addDestroyableEventListener(this.gridOptionsWrapper, 'functionsReadOnly', this.onColumnStateChanged.bind(this));
@@ -99,7 +96,7 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
     }
 
     private onLabelClicked(): void {
-        let nextState = !this.cbSelect.isSelected();
+        const nextState = !this.cbSelect.isSelected();
         this.onChangeCommon(nextState);
     }
 
@@ -109,11 +106,15 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
 
     private onChangeCommon(nextState: boolean): void {
         // ignore lock visible columns
-        if (this.column.isLockVisible()) { return; }
+        if (this.column.isLockVisible()) {
+            return;
+        }
 
         // only want to action if the user clicked the checkbox, not is we are setting the checkbox because
         // of a change in the model
-        if (this.processingColumnStateChange) { return; }
+        if (this.processingColumnStateChange) {
+            return;
+        }
 
         // action in a timeout, as the action takes some time, we want to update the icons first
         // so the user gets nice feedback when they click. otherwise there would be a lag and the
@@ -134,16 +135,16 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
     }
 
     private actionUnCheckedPivotMode(): void {
-        let functionPassive = this.gridOptionsWrapper.isFunctionsPassive();
-        let column = this.column;
-        let columnController = this.columnController;
+        const functionPassive = this.gridOptionsWrapper.isFunctionsPassive();
+        const column = this.column;
+        const columnController = this.columnController;
 
         // remove pivot if column is pivoted
         if (column.isPivotActive()) {
             if (functionPassive) {
-                let copyOfPivotColumns = this.columnController.getPivotColumns().slice();
+                const copyOfPivotColumns = this.columnController.getPivotColumns().slice();
                 copyOfPivotColumns.push(column);
-                let event: ColumnPivotChangeRequestEvent = {
+                const event: ColumnPivotChangeRequestEvent = {
                     type: Events.EVENT_COLUMN_PIVOT_CHANGE_REQUEST,
                     columns: copyOfPivotColumns,
                     api: this.gridApi,
@@ -157,9 +158,9 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
         // remove value if column is value
         if (column.isValueActive()) {
             if (functionPassive) {
-                let copyOfValueColumns = this.columnController.getValueColumns().slice();
+                const copyOfValueColumns = this.columnController.getValueColumns().slice();
                 copyOfValueColumns.push(column);
-                let event: ColumnValueChangeRequestEvent = {
+                const event: ColumnValueChangeRequestEvent = {
                     type: Events.EVENT_COLUMN_VALUE_CHANGE_REQUEST,
                     columns: copyOfValueColumns,
                     api: this.gridApi,
@@ -173,9 +174,9 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
         // remove group if column is grouped
         if (column.isRowGroupActive()) {
             if (functionPassive) {
-                let copyOfRowGroupColumns = this.columnController.getRowGroupColumns().slice();
+                const copyOfRowGroupColumns = this.columnController.getRowGroupColumns().slice();
                 copyOfRowGroupColumns.push(column);
-                let event: ColumnRowGroupChangeRequestEvent = {
+                const event: ColumnRowGroupChangeRequestEvent = {
                     type: Events.EVENT_COLUMN_ROW_GROUP_CHANGE_REQUEST,
                     columns: copyOfRowGroupColumns,
                     api: this.gridApi,
@@ -189,18 +190,20 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
     }
 
     private actionCheckedPivotMode(): void {
-        let column = this.column;
+        const column = this.column;
 
         // function already active, so do nothing
-        if (column.isValueActive() || column.isPivotActive() || column.isRowGroupActive()) { return; }
+        if (column.isValueActive() || column.isPivotActive() || column.isRowGroupActive()) {
+            return;
+        }
 
-        let functionPassive = this.gridOptionsWrapper.isFunctionsPassive();
+        const functionPassive = this.gridOptionsWrapper.isFunctionsPassive();
 
         if (column.isAllowValue()) {
             if (functionPassive) {
-                let copyOfValueColumns = this.columnController.getValueColumns().slice();
-                Utils.removeFromArray(copyOfValueColumns, column);
-                let event: ColumnValueChangeRequestEvent = {
+                const copyOfValueColumns = this.columnController.getValueColumns().slice();
+                _.removeFromArray(copyOfValueColumns, column);
+                const event: ColumnValueChangeRequestEvent = {
                     type: Events.EVENT_COLUMN_VALUE_CHANGE_REQUEST,
                     api: this.gridApi,
                     columnApi: this.columnApi,
@@ -212,9 +215,9 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
             }
         } else if (column.isAllowRowGroup()) {
             if (functionPassive) {
-                let copyOfRowGroupColumns = this.columnController.getRowGroupColumns().slice();
-                Utils.removeFromArray(copyOfRowGroupColumns, column);
-                let event: ColumnRowGroupChangeRequestEvent = {
+                const copyOfRowGroupColumns = this.columnController.getRowGroupColumns().slice();
+                _.removeFromArray(copyOfRowGroupColumns, column);
+                const event: ColumnRowGroupChangeRequestEvent = {
                     type: Events.EVENT_COLUMN_ROW_GROUP_CHANGE_REQUEST,
                     api: this.gridApi,
                     columnApi: this.columnApi,
@@ -226,9 +229,9 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
             }
         } else if (column.isAllowPivot()) {
             if (functionPassive) {
-                let copyOfPivotColumns = this.columnController.getPivotColumns().slice();
-                Utils.removeFromArray(copyOfPivotColumns, column);
-                let event: ColumnPivotChangeRequestEvent = {
+                const copyOfPivotColumns = this.columnController.getPivotColumns().slice();
+                _.removeFromArray(copyOfPivotColumns, column);
+                const event: ColumnPivotChangeRequestEvent = {
                     type: Events.EVENT_COLUMN_PIVOT_CHANGE_REQUEST,
                     api: this.gridApi,
                     columnApi: this.columnApi,
@@ -247,18 +250,18 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
             return;
         }
 
-        let dragSource: DragSource = {
+        const dragSource: DragSource = {
             type: DragSourceType.ToolPanel,
             eElement: this.eDragHandle,
             dragItemName: this.displayName,
             dragItemCallback: () => this.createDragItem()
         };
         this.dragAndDropService.addDragSource(dragSource, true);
-        this.addDestroyFunc( ()=> this.dragAndDropService.removeDragSource(dragSource) );
+        this.addDestroyFunc(() => this.dragAndDropService.removeDragSource(dragSource));
     }
 
     private createDragItem() {
-        let visibleState: { [key: string]: boolean } = {};
+        const visibleState: { [key: string]: boolean } = {};
         visibleState[this.column.getId()] = this.column.isVisible();
         return {
             columns: [this.column],
@@ -268,10 +271,10 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
 
     private onColumnStateChanged(): void {
         this.processingColumnStateChange = true;
-        let isPivotMode = this.columnController.isPivotMode();
+        const isPivotMode = this.columnController.isPivotMode();
         if (isPivotMode) {
             // if reducing, checkbox means column is one of pivot, value or group
-            let anyFunctionActive = this.column.isAnyFunctionActive();
+            const anyFunctionActive = this.column.isAnyFunctionActive();
             this.cbSelect.setSelected(anyFunctionActive);
             if (this.selectionCallback) {
                 this.selectionCallback(this.isSelected());
@@ -288,9 +291,9 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
         if (isPivotMode) {
             // when in pivot mode, the item should be read only if:
             //  a) gui is not allowed make any changes
-            let functionsReadOnly = this.gridOptionsWrapper.isFunctionsReadOnly();
+            const functionsReadOnly = this.gridOptionsWrapper.isFunctionsReadOnly();
             //  b) column is not allow any functions on it
-            let noFunctionsAllowed = !this.column.isAnyFunctionAllowed();
+            const noFunctionsAllowed = !this.column.isAnyFunctionAllowed();
             checkboxReadOnly = functionsReadOnly || noFunctionsAllowed;
         } else {
             // when in normal mode, the checkbox is read only if visibility is locked
@@ -299,13 +302,13 @@ export class ToolPanelColumnComp extends Component implements BaseColumnItem {
 
         this.cbSelect.setReadOnly(checkboxReadOnly);
 
-        let checkboxPassive = isPivotMode && this.gridOptionsWrapper.isFunctionsPassive();
+        const checkboxPassive = isPivotMode && this.gridOptionsWrapper.isFunctionsPassive();
         this.cbSelect.setPassive(checkboxPassive);
 
         this.processingColumnStateChange = false;
     }
 
-    public getDisplayName(): string {
+    public getDisplayName(): string | null {
         return this.displayName;
     }
 

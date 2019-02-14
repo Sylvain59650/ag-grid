@@ -1,4 +1,4 @@
-// Type definitions for ag-grid-community v19.1.1
+// Type definitions for ag-grid-community v20.0.0
 // Project: http://www.ag-grid.com/
 // Definitions by: Niall Crosby <https://github.com/ag-grid/>
 import { RowNode } from "../entities/rowNode";
@@ -7,10 +7,12 @@ export declare class PopupService {
     private gridCore;
     private gridOptionsWrapper;
     private environment;
+    private eventService;
     private activePopupElements;
+    private getDocument;
     private getPopupParent;
     positionPopupForMenu(params: {
-        eventSource: any;
+        eventSource: HTMLElement;
         ePopup: HTMLElement;
     }): void;
     positionPopupUnderMouseEvent(params: {
@@ -20,6 +22,7 @@ export declare class PopupService {
         mouseEvent: MouseEvent | Touch;
         ePopup: HTMLElement;
     }): void;
+    private calculatePointerAlign;
     positionPopupUnderComponent(params: {
         type: string;
         eventSource: HTMLElement;
@@ -36,7 +39,7 @@ export declare class PopupService {
     positionPopupOverComponent(params: {
         type: string;
         eventSource: HTMLElement;
-        ePopup: HTMLElement;
+        ePopup: HTMLElement | null;
         column: Column;
         rowNode: RowNode;
         minWidth?: number;
@@ -47,9 +50,8 @@ export declare class PopupService {
     private positionPopup;
     private keepYWithinBounds;
     private keepXWithinBounds;
-    addAsModalPopup(eChild: any, closeOnEsc: boolean, closedCallback?: () => void, click?: MouseEvent | Touch): (event?: any) => void;
-    addPopup(modal: boolean, eChild: any, closeOnEsc: boolean, closedCallback?: () => void, click?: MouseEvent | Touch): (event?: any) => void;
+    addAsModalPopup(eChild: any, closeOnEsc: boolean, closedCallback?: () => void, click?: MouseEvent | Touch | null): (event?: any) => void;
+    addPopup(modal: boolean, eChild: any, closeOnEsc: boolean, closedCallback?: () => void, click?: MouseEvent | Touch | null): (event?: any) => void;
     private isEventFromCurrentPopup;
     private isEventSameChainAsOriginalEvent;
 }
-//# sourceMappingURL=popupService.d.ts.map

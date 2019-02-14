@@ -1,6 +1,6 @@
 /**
  * ag-grid-community - Advanced Data Grid / Data Table supporting Javascript / React / AngularJS / Web Components
- * @version v19.1.1
+ * @version v20.0.0
  * @link http://www.ag-grid.com/
  * @license MIT
  */
@@ -121,6 +121,16 @@ var Utils = /** @class */ (function () {
             return currentObject;
         }
     };
+    Utils.getAbsoluteHeight = function (el) {
+        var styles = window.getComputedStyle(el);
+        var margin = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
+        return Math.ceil(el.offsetHeight + margin);
+    };
+    Utils.getAbsoluteWidth = function (el) {
+        var styles = window.getComputedStyle(el);
+        var margin = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
+        return Math.ceil(el.offsetWidth + margin);
+    };
     Utils.getScrollLeft = function (element, rtl) {
         var scrollLeft = element.scrollLeft;
         if (rtl) {
@@ -158,6 +168,11 @@ var Utils = /** @class */ (function () {
         }
         element.scrollLeft = value;
     };
+    Utils.clearElement = function (el) {
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+    };
     Utils.iterateNamedNodeMap = function (map, callback) {
         if (!map) {
             return;
@@ -168,7 +183,7 @@ var Utils = /** @class */ (function () {
         }
     };
     Utils.iterateObject = function (object, callback) {
-        if (this.missing(object)) {
+        if (!object || this.missing(object)) {
             return;
         }
         if (Array.isArray(object)) {
@@ -242,8 +257,9 @@ var Utils = /** @class */ (function () {
         return Object.keys(allValues);
     };
     Utils.mergeDeep = function (dest, source) {
-        if (!this.exists(source))
+        if (!this.exists(source)) {
             return;
+        }
         this.iterateObject(source, function (key, newValue) {
             var oldValue = dest[key];
             if (oldValue === newValue) {
@@ -274,13 +290,16 @@ var Utils = /** @class */ (function () {
     };
     Utils.parseYyyyMmDdToDate = function (yyyyMmDd, separator) {
         try {
-            if (!yyyyMmDd)
+            if (!yyyyMmDd) {
                 return null;
-            if (yyyyMmDd.indexOf(separator) === -1)
+            }
+            if (yyyyMmDd.indexOf(separator) === -1) {
                 return null;
+            }
             var fields = yyyyMmDd.split(separator);
-            if (fields.length != 3)
+            if (fields.length != 3) {
                 return null;
+            }
             return new Date(Number(fields[0]), Number(fields[1]) - 1, Number(fields[2]));
         }
         catch (e) {
@@ -288,14 +307,16 @@ var Utils = /** @class */ (function () {
         }
     };
     Utils.serializeDateToYyyyMmDd = function (date, separator) {
-        if (!date)
+        if (!date) {
             return null;
+        }
         return date.getFullYear() + separator + Utils.pad(date.getMonth() + 1, 2) + separator + Utils.pad(date.getDate(), 2);
     };
     Utils.pad = function (num, totalStringSize) {
         var asString = num + "";
-        while (asString.length < totalStringSize)
+        while (asString.length < totalStringSize) {
             asString = "0" + asString;
+        }
         return asString;
     };
     Utils.pushAll = function (target, source) {
@@ -330,7 +351,7 @@ var Utils = /** @class */ (function () {
             return this.find(objToArray, predicate, value);
         }
         var collectionAsArray = collection;
-        var firstMatchingItem;
+        var firstMatchingItem = null;
         for (var i = 0; i < collectionAsArray.length; i++) {
             var item = collectionAsArray[i];
             if (typeof predicate === 'string') {
@@ -443,7 +464,7 @@ var Utils = /** @class */ (function () {
         return !this.exists(value);
     };
     Utils.missingOrEmpty = function (value) {
-        return this.missing(value) || value.length === 0;
+        return !value || this.missing(value) || value.length === 0;
     };
     Utils.missingOrEmptyObject = function (value) {
         return this.missing(value) || Object.keys(value).length === 0;
@@ -459,8 +480,9 @@ var Utils = /** @class */ (function () {
         }
         for (var i = 0; i < values.length; i++) {
             var value = values[i];
-            if (exports._.exists(value))
+            if (exports._.exists(value)) {
                 return value;
+            }
         }
         return null;
     };
@@ -475,11 +497,11 @@ var Utils = /** @class */ (function () {
         return false;
     };
     Utils.existsAndNotEmpty = function (value) {
-        return this.exists(value) && value.length > 0;
+        return value != null && this.exists(value) && value.length > 0;
     };
     Utils.removeAllChildren = function (node) {
         if (node) {
-            while (node.hasChildNodes()) {
+            while (node.hasChildNodes() && node.lastChild) {
                 node.removeChild(node.lastChild);
             }
         }
@@ -548,11 +570,13 @@ var Utils = /** @class */ (function () {
                 var cssClasses = element.className.split(' ');
                 if (cssClasses.indexOf(className) < 0) {
                     cssClasses.push(className);
-                    element.className = cssClasses.join(' ');
+                    element.setAttribute('class', cssClasses.join(' '));
                 }
             }
             else {
-                element.className = className;
+                // do not use element.classList = className here, it will cause
+                // a read-only assignment error on some browsers (IE/Edge).
+                element.setAttribute('class', className);
             }
         }
     };
@@ -615,7 +639,7 @@ var Utils = /** @class */ (function () {
                     while (cssClasses.indexOf(className) >= 0) {
                         cssClasses.splice(cssClasses.indexOf(className), 1);
                     }
-                    element.className = cssClasses.join(' ');
+                    element.setAttribute('class', cssClasses.join(' '));
                 }
             }
         }
@@ -724,7 +748,8 @@ var Utils = /** @class */ (function () {
         if (this.missing(array1) && this.missing(array2)) {
             return true;
         }
-        if (this.missing(array1) || this.missing(array2)) {
+        if ((this.missing(array1) || this.missing(array2)) ||
+            (!array1 || !array2)) {
             return false;
         }
         if (array1.length !== array2.length) {
@@ -821,12 +846,12 @@ var Utils = /** @class */ (function () {
             return null;
         }
     };
-    Utils.formatWidth = function (width) {
-        if (typeof width === "number") {
-            return width + "px";
+    Utils.formatSize = function (size) {
+        if (typeof size === "number") {
+            return size + "px";
         }
         else {
-            return width;
+            return size;
         }
     };
     Utils.formatNumberTwoDecimalPlacesAndCommas = function (value) {
@@ -869,10 +894,11 @@ var Utils = /** @class */ (function () {
         }
     };
     Utils.createIconNoSpan = function (iconName, gridOptionsWrapper, column) {
-        var userProvidedIcon;
+        var userProvidedIcon = null;
         // check col for icon first
-        if (column && column.getColDef().icons) {
-            userProvidedIcon = column.getColDef().icons[iconName];
+        var icons = (column && column.getColDef().icons) ? column.getColDef().icons : null;
+        if (icons) {
+            userProvidedIcon = icons[iconName];
         }
         // it not in col, try grid options
         if (!userProvidedIcon && gridOptionsWrapper.getIcons()) {
@@ -917,7 +943,9 @@ var Utils = /** @class */ (function () {
         }
         Object.keys(styles).forEach(function (key) {
             var keyCamelCase = _this.hyphenToCamelCase(key);
-            eElement.style[keyCamelCase] = styles[key];
+            if (keyCamelCase) {
+                eElement.style[keyCamelCase] = styles[key];
+            }
         });
     };
     Utils.isHorizontalScrollShowing = function (element) {
@@ -963,7 +991,9 @@ var Utils = /** @class */ (function () {
         outer.appendChild(inner);
         var widthWithScroll = inner.offsetWidth;
         // remove divs
-        outer.parentNode.removeChild(outer);
+        if (outer.parentNode) {
+            outer.parentNode.removeChild(outer);
+        }
         return widthNoScroll - widthWithScroll;
     };
     Utils.hasOverflowScrolling = function () {
@@ -975,8 +1005,9 @@ var Utils = /** @class */ (function () {
         body.appendChild(div);
         div.setAttribute('style', prefixes.map(function (prefix) { return "-" + prefix + "-overflow-scrolling: touch"; }).concat('overflow-scrolling: touch').join(';'));
         var computedStyle = window.getComputedStyle(div);
-        if (computedStyle['overflowScrolling'] === 'touch')
+        if (computedStyle.overflowScrolling === 'touch') {
             found = true;
+        }
         if (!found) {
             for (var _i = 0, prefixes_1 = prefixes; _i < prefixes_1.length; _i++) {
                 p = prefixes_1[_i];
@@ -986,7 +1017,9 @@ var Utils = /** @class */ (function () {
                 }
             }
         }
-        div.parentNode.removeChild(div);
+        if (div.parentNode) {
+            div.parentNode.removeChild(div);
+        }
         return found;
     };
     Utils.isKeyPressed = function (event, keyToCheck) {
@@ -997,7 +1030,19 @@ var Utils = /** @class */ (function () {
         this.addOrRemoveCssClass(element, 'ag-hidden', !visible);
     };
     Utils.setHidden = function (element, hidden) {
-        this.addOrRemoveCssClass(element, 'ag-visibility-hidden', hidden);
+        this.addOrRemoveCssClass(element, 'ag-invisible', hidden);
+    };
+    Utils.setFixedWidth = function (element, width) {
+        width = this.formatSize(width);
+        element.style.width = width;
+        element.style.maxWidth = width;
+        element.style.minWidth = width;
+    };
+    Utils.setFixedHeight = function (element, height) {
+        height = this.formatSize(height);
+        element.style.height = height;
+        element.style.maxHeight = height;
+        element.style.minHeight = height;
     };
     Utils.isBrowserIE = function () {
         if (this.isIE === undefined) {
@@ -1024,19 +1069,15 @@ var Utils = /** @class */ (function () {
     };
     Utils.isBrowserChrome = function () {
         if (this.isChrome === undefined) {
-            // this is the old original we we did it, but it didn't work on android
-            // let anyWindow = <any> window;
-            // this.isChrome = !!anyWindow.chrome && !!anyWindow.chrome.webstore;
-            // this is the new way
-            // taken from https://stackoverflow.com/questions/4565112/javascript-how-to-find-out-if-the-user-browser-is-chrome
-            this.isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            var win = window;
+            this.isChrome = !!win.chrome && (!!win.chrome.webstore || !!win.chrome.runtime);
         }
         return this.isChrome;
     };
     Utils.isBrowserFirefox = function () {
         if (this.isFirefox === undefined) {
-            var anyWindow = window;
-            this.isFirefox = typeof anyWindow.InstallTrigger !== 'undefined';
+            var win = window;
+            this.isFirefox = typeof win.InstallTrigger !== 'undefined';
         }
         return this.isFirefox;
     };
@@ -1192,8 +1233,9 @@ var Utils = /** @class */ (function () {
      * From http://stackoverflow.com/questions/9716468/is-there-any-function-like-isnumeric-in-javascript-to-validate-numbers
      */
     Utils.isNumeric = function (value) {
-        if (value === '')
+        if (value === '') {
             return false;
+        }
         return !isNaN(parseFloat(value)) && isFinite(value);
     };
     Utils.escape = function (toEscape) {
@@ -1384,9 +1426,9 @@ var Utils = /** @class */ (function () {
             //   function several times, but it will only execute once
             //   [before or after imposing a delay].
             //   Each time the returned function is called, the timer starts over.
-            clearTimeout(timeout);
+            window.clearTimeout(timeout);
             // Set the new timeout
-            timeout = setTimeout(function () {
+            timeout = window.setTimeout(function () {
                 // Inside the timeout function, clear the timeout variable
                 // which will let the next execution run when in 'immediate' mode
                 timeout = null;
@@ -1399,8 +1441,9 @@ var Utils = /** @class */ (function () {
                 }
             }, wait);
             // Immediate mode and no wait timer? Execute the function..
-            if (callNow)
+            if (callNow) {
                 func.apply(context, args);
+            }
         };
     };
     // a user once raised an issue - they said that when you opened a popup (eg context menu)
@@ -1423,23 +1466,27 @@ var Utils = /** @class */ (function () {
     };
     Utils.executeAfter = function (funcs, millis) {
         if (funcs.length > 0) {
-            setTimeout(function () {
+            window.setTimeout(function () {
                 funcs.forEach(function (func) { return func(); });
             }, millis);
         }
     };
     Utils.referenceCompare = function (left, right) {
-        if (left == null && right == null)
+        if (left == null && right == null) {
             return true;
-        if (left == null && right)
+        }
+        if (left == null && right) {
             return false;
-        if (left && right == null)
+        }
+        if (left && right == null) {
             return false;
+        }
         return left === right;
     };
     Utils.get = function (source, expression, defaultValue) {
-        if (source == null)
+        if (source == null) {
             return defaultValue;
+        }
         if (expression.indexOf('.') > -1) {
             var fields = expression.split('.');
             var thisKey = fields[0];
@@ -1460,8 +1507,9 @@ var Utils = /** @class */ (function () {
         eElement.addEventListener(event, listener, (Utils.passiveEvents.indexOf(event) > -1 ? { passive: true } : undefined));
     };
     Utils.camelCaseToHumanText = function (camelCase) {
-        if (camelCase == null)
+        if (!camelCase || camelCase == null) {
             return null;
+        }
         // Who needs to learn how to code when you have stack overflow!
         // from: https://stackoverflow.com/questions/15369566/putting-space-in-camel-case-string-using-regular-expression
         var rex = /([A-Z])([A-Z])([a-z])|([a-z])([A-Z])/g;
@@ -1776,8 +1824,9 @@ var Promise = /** @class */ (function () {
         });
     };
     Promise.prototype.resolveNow = function (ifNotResolvedValue, ifResolved) {
-        if (this.status == PromiseStatus.IN_PROGRESS)
+        if (this.status == PromiseStatus.IN_PROGRESS) {
             return ifNotResolvedValue;
+        }
         return ifResolved(this.resolution);
     };
     Promise.prototype.onDone = function (value) {

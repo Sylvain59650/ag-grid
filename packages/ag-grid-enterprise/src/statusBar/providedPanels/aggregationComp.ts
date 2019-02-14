@@ -1,5 +1,4 @@
 import {
-    _,
     Autowired,
     CellNavigationService,
     Component,
@@ -12,16 +11,17 @@ import {
     GridOptionsWrapper,
     GridRow,
     IRowModel,
+    IStatusPanelComp,
     PinnedRowModel,
-    PreConstruct,
     PostConstruct,
+    PreConstruct,
     RefSelector,
     RowNode,
     ValueService,
-    IStatusPanelComp
+    _
 } from 'ag-grid-community';
-import {RangeController} from "../../rangeController";
-import {NameValueComp} from "./nameValueComp";
+import { RangeController } from "../../rangeController";
+import { NameValueComp } from "./nameValueComp";
 
 export class AggregationComp extends Component implements IStatusPanelComp {
 
@@ -58,10 +58,11 @@ export class AggregationComp extends Component implements IStatusPanelComp {
     private preConstruct(): void {
         this.instantiate(this.context);
     }
+
     @PostConstruct
     private postConstruct(): void {
         if (!this.isValidRowModel()) {
-            console.warn(`ag-Grid: agSelectedRowCountComponent should only be used with the client and server side row model.`);
+            console.warn(`ag-Grid: agAggregationComponent should only be used with the client and server side row model.`);
             return;
         }
 
@@ -72,40 +73,40 @@ export class AggregationComp extends Component implements IStatusPanelComp {
     private isValidRowModel() {
         // this component is only really useful with client or server side rowmodels
         const rowModelType = this.gridApi.getModel().getType();
-        return rowModelType === 'clientSide' || rowModelType !== 'serverSide';
+        return rowModelType === 'clientSide' || rowModelType === 'serverSide';
     }
 
     public init() {
     }
 
-    private setAggregationComponentValue(aggFuncName: string, value: number, visible: boolean) {
-        let statusBarValueComponent = this.getAggregationValueComponent(aggFuncName);
-        if (_.exists(statusBarValueComponent)) {
+    private setAggregationComponentValue(aggFuncName: string, value: number | null, visible: boolean) {
+        const statusBarValueComponent = this.getAggregationValueComponent(aggFuncName);
+        if (_.exists(statusBarValueComponent) && statusBarValueComponent) {
             statusBarValueComponent.setValue(_.formatNumberTwoDecimalPlacesAndCommas(value));
             statusBarValueComponent.setVisible(visible);
         }
     }
 
-    private getAggregationValueComponent(aggFuncName: string): NameValueComp {
+    private getAggregationValueComponent(aggFuncName: string): NameValueComp | null {
         // converts user supplied agg name to our reference - eg: sum => sumAggregationComp
-        let refComponentName = `${aggFuncName}AggregationComp`;
+        const refComponentName = `${aggFuncName}AggregationComp`;
 
         // if the user has specified the agAggregationPanelComp but no aggFuncs we show the all
         // if the user has specified the agAggregationPanelComp and aggFuncs, then we only show the aggFuncs listed
-        let statusBarValueComponent: NameValueComp = null;
-        const aggregationPanelConfig = _.exists(this.gridOptions.statusBar) ? _.find(this.gridOptions.statusBar.statusPanels, aggFuncName) : null;
-        if (_.exists(aggregationPanelConfig)) {
+        let statusBarValueComponent: NameValueComp | null = null;
+        const aggregationPanelConfig = _.exists(this.gridOptions.statusBar) && this.gridOptions.statusBar ? _.find(this.gridOptions.statusBar.statusPanels, aggFuncName) : null;
+        if (_.exists(aggregationPanelConfig) && aggregationPanelConfig) {
             // a little defensive here - if no statusPanelParams show it, if componentParams we also expect aggFuncs
             if (!_.exists(aggregationPanelConfig.statusPanelParams) ||
                 (_.exists(aggregationPanelConfig.statusPanelParams) &&
                     _.exists(aggregationPanelConfig.statusPanelParams.aggFuncs) &&
                     _.exists(_.find(aggregationPanelConfig.statusPanelParams.aggFuncs, (item) => item === aggFuncName)))
             ) {
-                statusBarValueComponent = (<any>this)[refComponentName];
+                statusBarValueComponent = (this as any)[refComponentName];
             }
         } else {
             // components not specified - assume we can show this component
-            statusBarValueComponent = (<any>this)[refComponentName];
+            statusBarValueComponent = (this as any)[refComponentName];
         }
 
         // either we can't find it (which would indicate a typo or similar user side), or the user has deliberately
@@ -114,46 +115,49 @@ export class AggregationComp extends Component implements IStatusPanelComp {
     }
 
     private onRangeSelectionChanged(): void {
-        let cellRanges = this.rangeController.getCellRanges();
+        const cellRanges = this.rangeController.getCellRanges();
 
         let sum = 0;
         let count = 0;
         let numberCount = 0;
-        let min: number = null;
-        let max: number = null;
+        let min: number | null = null;
+        let max: number = 0;
 
-        let cellsSoFar: any = {};
+        const cellsSoFar: any = {};
 
-        if (!_.missingOrEmpty(cellRanges)) {
+        if (cellRanges && !_.missingOrEmpty(cellRanges)) {
 
             cellRanges.forEach((cellRange) => {
 
                 // get starting and ending row, remember rowEnd could be before rowStart
-                let startRow = cellRange.start.getGridRow();
-                let endRow = cellRange.end.getGridRow();
+                const startRow = cellRange.start.getGridRow();
+                const endRow = cellRange.end.getGridRow();
 
-                let startRowIsFirst = startRow.before(endRow);
+                const startRowIsFirst = startRow.before(endRow);
 
-                let currentRow = startRowIsFirst ? startRow : endRow;
-                let lastRow = startRowIsFirst ? endRow : startRow;
+                let currentRow: GridRow | null = startRowIsFirst ? startRow : endRow;
+                const lastRow = startRowIsFirst ? endRow : startRow;
 
                 while (true) {
 
-                    let finishedAllRows = _.missing(currentRow) || lastRow.before(currentRow);
-                    if (finishedAllRows) {
+                    const finishedAllRows = _.missing(currentRow) || !currentRow || lastRow.before(currentRow);
+                    if (finishedAllRows || !currentRow || !cellRange.columns) {
                         break;
                     }
 
                     cellRange.columns.forEach((column) => {
+                        if (currentRow === null) {
+                            return;
+                        }
 
                         // we only want to include each cell once, in case a cell is in multiple ranges
-                        let cellId = currentRow.getGridCell(column).createId();
+                        const cellId = currentRow.getGridCell(column).createId();
                         if (cellsSoFar[cellId]) {
                             return;
                         }
                         cellsSoFar[cellId] = true;
 
-                        let rowNode = this.getRowNode(currentRow);
+                        const rowNode = this.getRowNode(currentRow);
                         if (_.missing(rowNode)) {
                             return;
                         }
@@ -196,8 +200,8 @@ export class AggregationComp extends Component implements IStatusPanelComp {
             });
         }
 
-        let gotResult = count > 1;
-        let gotNumberResult = numberCount > 1;
+        const gotResult = count > 1;
+        const gotNumberResult = numberCount > 1;
 
         // we show count even if no numbers
         this.setAggregationComponentValue('count', count, gotResult);
@@ -209,7 +213,7 @@ export class AggregationComp extends Component implements IStatusPanelComp {
         this.setAggregationComponentValue('avg', (sum / numberCount), gotNumberResult);
     }
 
-    private getRowNode(gridRow: GridRow): RowNode {
+    private getRowNode(gridRow: GridRow): RowNode | null {
         switch (gridRow.floating) {
             case Constants.PINNED_TOP:
                 return this.pinnedRowModel.getPinnedTopRowData()[gridRow.rowIndex];

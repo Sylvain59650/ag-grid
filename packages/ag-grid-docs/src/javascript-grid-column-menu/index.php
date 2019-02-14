@@ -153,15 +153,19 @@ menuItems.push('separator')</snippet>
         <li><code>postProcessPopup</code> is used on the Gold column to reposition the menu 25px lower.</li>
     </ul>
 
-    <?= example('Column Menu', 'column-menu', 'generated', array("enterprise" => 1)) ?>
+    <?= example('Column Menu', 'column-menu', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
 
     <h2>Popup Parent</h2>
 
     <p>
-        The popup menu will attach itself directly to <code>document.body</code> and not the main grid. This
-        will allow the menu to overflow outside the grid if the menu is physically larger than the grid.
-        If you want the popup menu to attache to a different parent then set property <code>popupParent</code>
-        to the container (usually a div or span) you want to use as the parent.
+        Under most scenarios, the menu will fit inside the grid. However if the grid is small and / or the menu
+        is very large, then the menu will not fit inside the grid and it will be clipped. This will lead to
+        a bad user experience.
+    </p>
+
+    <p>
+        To fix this, you should set property <code>popupParent</code> which is explained in the
+        <a href="../javascript-grid-context-menu/#popup-parent">popup parent</a> for context menus.
     </p>
 
 <?php include '../documentation-main/documentation_footer.php';?>

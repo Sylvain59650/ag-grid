@@ -1,5 +1,4 @@
 import {
-    _,
     Autowired,
     Component,
     Context,
@@ -7,15 +6,16 @@ import {
     EventService,
     GridApi,
     GridOptionsWrapper,
-    IToolPanelParams,
     IToolPanelComp,
-    ToolPanelVisibleChangedEvent
+    IToolPanelParams,
+    ToolPanelVisibleChangedEvent,
+    _
 } from "ag-grid-community/main";
-import {PivotModePanel} from "./panels/pivotModePanel";
-import {RowGroupDropZonePanel} from "./panels/rowGroupDropZonePanel";
-import {ValuesDropZonePanel} from "./panels/valueDropZonePanel";
-import {PivotDropZonePanel} from "./panels/pivotDropZonePanel";
-import {PrimaryColsPanel} from "./panels/primaryColsPanel/primaryColsPanel";
+import { PivotModePanel } from "./panels/pivotModePanel";
+import { RowGroupDropZonePanel } from "./panels/rowGroupDropZonePanel";
+import { ValuesDropZonePanel } from "./panels/valueDropZonePanel";
+import { PivotDropZonePanel } from "./panels/pivotDropZonePanel";
+import { PrimaryColsPanel } from "./panels/primaryColsPanel/primaryColsPanel";
 
 export interface ToolPanelColumnCompParams extends IToolPanelParams {
     suppressRowGroups: boolean;
@@ -31,7 +31,7 @@ export interface ToolPanelColumnCompParams extends IToolPanelParams {
 
 export class ColumnToolPanel extends Component implements IToolPanelComp {
 
-    private static TEMPLATE =`<div class="ag-column-panel"></div>`;
+    private static TEMPLATE = `<div class="ag-column-panel"></div>`;
 
     @Autowired("context") private context: Context;
     @Autowired("gridOptionsWrapper") private gridOptionsWrapper: GridOptionsWrapper;
@@ -54,7 +54,7 @@ export class ColumnToolPanel extends Component implements IToolPanelComp {
             this.init(this.params);
         }
 
-        let event: ToolPanelVisibleChangedEvent = {
+        const event: ToolPanelVisibleChangedEvent = {
             type: Events.EVENT_TOOL_PANEL_VISIBLE_CHANGED,
             api: this.gridOptionsWrapper.getApi(),
             columnApi: this.gridOptionsWrapper.getColumnApi()
@@ -63,7 +63,7 @@ export class ColumnToolPanel extends Component implements IToolPanelComp {
     }
 
     public init(params: ToolPanelColumnCompParams): void {
-        let defaultParams:ToolPanelColumnCompParams = {
+        const defaultParams: ToolPanelColumnCompParams = {
             suppressSideButtons: false,
             suppressColumnSelectAll: false,
             suppressColumnFilter: false,

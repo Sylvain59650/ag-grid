@@ -1,17 +1,15 @@
 import {
-    QuerySelector,
-    Component,
+    AgCheckbox,
     Autowired,
     ColumnController,
-    GridOptionsWrapper,
-    PostConstruct,
-    EventService,
-    Events,
+    Component,
     Context,
-    AgCheckbox,
-    PreConstruct
+    Events,
+    EventService,
+    GridOptionsWrapper,
+    PreConstruct,
+    QuerySelector
 } from "ag-grid-community/main";
-
 
 export class PivotModePanel extends Component {
 
@@ -27,7 +25,7 @@ export class PivotModePanel extends Component {
     }
 
     private createTemplate(): string {
-        let localeTextFunc = this.gridOptionsWrapper.getLocaleTextFunc();
+        const localeTextFunc = this.gridOptionsWrapper.getLocaleTextFunc();
         return `<div class="ag-pivot-mode-panel">
                 <ag-checkbox class="ag-pivot-mode-select" label="${localeTextFunc('pivotMode', 'Pivot Mode')}"></ag-checkbox>
             </div>`;
@@ -40,21 +38,24 @@ export class PivotModePanel extends Component {
 
         this.cbPivotMode.setSelected(this.columnController.isPivotMode());
 
-        this.addDestroyableEventListener(this.cbPivotMode, AgCheckbox.EVENT_CHANGED, this.onBtPivotMode.bind(this) );
+        this.addDestroyableEventListener(this.cbPivotMode, AgCheckbox.EVENT_CHANGED, this.onBtPivotMode.bind(this));
         this.addDestroyableEventListener(this.eventService, Events.EVENT_COLUMN_EVERYTHING_CHANGED, this.onPivotModeChanged.bind(this));
         this.addDestroyableEventListener(this.eventService, Events.EVENT_COLUMN_PIVOT_MODE_CHANGED, this.onPivotModeChanged.bind(this));
     }
-    
+
     private onBtPivotMode(): void {
-        let newValue = this.cbPivotMode.isSelected();
+        const newValue = this.cbPivotMode.isSelected();
         if (newValue !== this.columnController.isPivotMode()) {
             this.columnController.setPivotMode(newValue, "toolPanelUi");
-            this.gridOptionsWrapper.getApi().refreshHeader();
+            const api = this.gridOptionsWrapper.getApi();
+            if (api) {
+                api.refreshHeader();
+            }
         }
     }
-    
+
     private onPivotModeChanged(): void {
-        let pivotModeActive = this.columnController.isPivotMode();
+        const pivotModeActive = this.columnController.isPivotMode();
         this.cbPivotMode.setSelected(pivotModeActive);
     }
 }

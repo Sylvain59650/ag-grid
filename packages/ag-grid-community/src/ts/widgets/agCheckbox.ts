@@ -1,10 +1,9 @@
-
-import {Component} from "./component";
-import {QuerySelector, Listener} from "./componentAnnotations";
-import {Utils as _} from "../utils";
-import {PostConstruct, Autowired, PreConstruct} from "../context/context";
-import {GridOptionsWrapper} from "../gridOptionsWrapper";
-import {AgEvent} from "../events";
+import { Component } from "./component";
+import { Listener, QuerySelector } from "./componentAnnotations";
+import { Autowired, PostConstruct, PreConstruct } from "../context/context";
+import { GridOptionsWrapper } from "../gridOptionsWrapper";
+import { AgEvent } from "../events";
+import { _ } from "../utils";
 
 export interface ChangeEvent extends AgEvent {
     selected: boolean;
@@ -33,7 +32,7 @@ export class AgCheckbox extends Component {
     private readOnly = false;
     private passive = false;
 
-    private props: {label: string};
+    private props: { label: string };
 
     constructor() {
         super();
@@ -108,10 +107,10 @@ export class AgCheckbox extends Component {
     }
 
     public toggle(): void {
-        let nextValue = this.getNextValue();
+        const nextValue = this.getNextValue();
 
         if (this.passive) {
-            let event: ChangeEvent = {
+            const event: ChangeEvent = {
                 type: AgCheckbox.EVENT_CHANGED,
                 selected: nextValue
             };
@@ -122,19 +121,19 @@ export class AgCheckbox extends Component {
     }
 
     public setSelected(selected: boolean): void {
-        if (this.selected === selected) { return; }
+        if (this.selected === selected) {
+            return;
+        }
 
-        if (selected===true) {
+        if (selected === true) {
             this.selected = true;
-        } else if (selected===false) {
+        } else if (selected === false) {
             this.selected = false;
-        } else {
-            this.selected = undefined;
         }
 
         this.updateIcons();
 
-        let event: ChangeEvent = {
+        const event: ChangeEvent = {
             type: AgCheckbox.EVENT_CHANGED,
             selected: this.selected
         };

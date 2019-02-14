@@ -1,4 +1,4 @@
-// ag-grid-enterprise v19.1.1
+// ag-grid-enterprise v20.0.0
 "use strict";
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -29,7 +29,7 @@ var PivotColDefService = /** @class */ (function () {
         // we clone, so the colDefs in pivotColumnsGroupDefs and pivotColumnDefs are not shared. this is so that
         // any changes the user makes (via processSecondaryColumnDefinitions) don't impact the internal aggregations,
         // as these use the col defs also
-        var pivotColumnDefsClone = pivotColumnDefs.map(function (colDef) { return ag_grid_community_1.Utils.cloneObject(colDef); });
+        var pivotColumnDefsClone = pivotColumnDefs.map(function (colDef) { return ag_grid_community_1._.cloneObject(colDef); });
         return {
             pivotColumnGroupDefs: pivotColumnGroupDefs,
             pivotColumnDefs: pivotColumnDefsClone
@@ -41,7 +41,7 @@ var PivotColDefService = /** @class */ (function () {
     // @pivotKeys - the keys for the pivot, eg if pivoting on {Language,Country} then could be {English,Ireland}
     PivotColDefService.prototype.recursivelyAddGroup = function (parentChildren, pivotColumnDefs, index, uniqueValues, pivotKeys, columnIdSequence, levelsDeep, primaryPivotColumns) {
         var _this = this;
-        ag_grid_community_1.Utils.iterateObject(uniqueValues, function (key, value) {
+        ag_grid_community_1._.iterateObject(uniqueValues, function (key, value) {
             var newPivotKeys = pivotKeys.slice(0);
             newPivotKeys.push(key);
             var createGroup = index !== levelsDeep;
@@ -94,8 +94,9 @@ var PivotColDefService = /** @class */ (function () {
     };
     PivotColDefService.prototype.addPivotTotalsToGroups = function (pivotColumnGroupDefs, pivotColumnDefs, columnIdSequence) {
         var _this = this;
-        if (!this.gridOptionsWrapper.getPivotColumnGroupTotals())
+        if (!this.gridOptionsWrapper.getPivotColumnGroupTotals()) {
             return;
+        }
         var insertAfter = this.gridOptionsWrapper.getPivotColumnGroupTotals() === 'after';
         var valueCols = this.columnController.getValueColumns();
         var aggFuncs = valueCols.map(function (valueCol) { return valueCol.getAggFunc(); });
@@ -113,14 +114,18 @@ var PivotColDefService = /** @class */ (function () {
     PivotColDefService.prototype.recursivelyAddPivotTotal = function (groupDef, pivotColumnDefs, columnIdSequence, valueColumn, insertAfter) {
         var _this = this;
         var group = groupDef;
-        if (!group.children)
-            return [groupDef.colId];
+        if (!group.children) {
+            var def = groupDef;
+            return def.colId ? [def.colId] : null;
+        }
         var colIds = [];
         // need to recurse children first to obtain colIds used in the aggregation stage
         group.children
             .forEach(function (grp) {
             var childColIds = _this.recursivelyAddPivotTotal(grp, pivotColumnDefs, columnIdSequence, valueColumn, insertAfter);
-            colIds = colIds.concat(childColIds);
+            if (childColIds) {
+                colIds = colIds.concat(childColIds);
+            }
         });
         // only add total colDef if there is more than 1 child node
         if (group.children.length > 1) {
@@ -137,8 +142,9 @@ var PivotColDefService = /** @class */ (function () {
     };
     PivotColDefService.prototype.addRowGroupTotals = function (pivotColumnGroupDefs, pivotColumnDefs, valueColumns, pivotColumns, columnIdSequence) {
         var _this = this;
-        if (!this.gridOptionsWrapper.getPivotRowTotals())
+        if (!this.gridOptionsWrapper.getPivotRowTotals()) {
             return;
+        }
         var insertAfter = this.gridOptionsWrapper.getPivotRowTotals() === 'after';
         // order of row group totals depends on position
         var valueCols = insertAfter ? valueColumns.slice() : valueColumns.slice().reverse();
@@ -161,7 +167,7 @@ var PivotColDefService = /** @class */ (function () {
         var group = groupDef;
         if (!group.children) {
             var colDef = group;
-            return colDef.pivotValueColumn === valueColumn ? [colDef.colId] : [];
+            return colDef.pivotValueColumn === valueColumn && colDef.colId ? [colDef.colId] : [];
         }
         var colIds = [];
         group.children
@@ -210,7 +216,7 @@ var PivotColDefService = /** @class */ (function () {
         var colDef = {};
         if (valueColumn) {
             var colDefToCopy = valueColumn.getColDef();
-            ag_grid_community_1.Utils.assign(colDef, colDefToCopy);
+            ag_grid_community_1._.assign(colDef, colDefToCopy);
             // even if original column was hidden, we always show the pivot value column, otherwise it would be
             // very confusing for people thinking the pivot is broken
             colDef.hide = false;
@@ -222,16 +228,18 @@ var PivotColDefService = /** @class */ (function () {
         colDef.field = colDef.colId;
         colDef.pivotKeys = pivotKeys;
         colDef.pivotValueColumn = valueColumn;
-        colDef.suppressFilter = true;
+        colDef.filter = false;
         return colDef;
     };
     PivotColDefService.prototype.sameAggFuncs = function (aggFuncs) {
-        if (aggFuncs.length == 1)
+        if (aggFuncs.length == 1) {
             return true;
+        }
         //check if all aggFunc's match
         for (var i = 1; i < aggFuncs.length; i++) {
-            if (aggFuncs[i] !== aggFuncs[0])
+            if (aggFuncs[i] !== aggFuncs[0]) {
                 return false;
+            }
         }
         return true;
     };
@@ -240,6 +248,19 @@ var PivotColDefService = /** @class */ (function () {
             return userComparator(a.headerName, b.headerName);
         }
         else {
+            if (a.headerName && !b.headerName) {
+                return 1;
+            }
+            else if (!a.headerName && b.headerName) {
+                return -1;
+            }
+            // slightly naff here - just to satify typescript
+            // really should be &&, but if so ts complains
+            // the above if/else checks would deal with either being falsy, so at this stage if either are falsy, both are
+            // ..still naff though
+            if (!a.headerName || !b.headerName) {
+                return 0;
+            }
             if (a.headerName < b.headerName) {
                 return -1;
             }

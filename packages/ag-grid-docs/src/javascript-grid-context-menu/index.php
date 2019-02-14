@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Context Menu: Enterprise Grade Feature of our Datagrid";
-$pageDescription = "ag-Grid is a feature-rich data grid supporting major JavaScript Frameworks. One such feature is Context Menu. The Context Menu appears when you right click on a cell. Use the default options or provide your own. Version 17 is available for download now, take it for a free two month trial.";
+$pageDescription = "ag-Grid is a feature-rich data grid supporting major JavaScript Frameworks. One such feature is Context Menu. The Context Menu appears when you right click on a cell. Use the default options or provide your own. Version 20 is available for download now, take it for a free two month trial.";
 $pageKeyboards = "ag-Grid Javascript Grid Context Menu";
 $pageGroup = "feature";
 include '../documentation-main/documentation_header.php';
@@ -92,10 +92,10 @@ MenuItemDef {
         <li><code>copyWithHeaders</code>Copy selected value to clipboard with headers.</li>
         <li><code>paste</code>: Always disabled (see note in clipboard section).</li>
         <li><code>resetColumns</code>: Reset all columns.</li>
-        <li><code>toolPanel</code>: Show / hide the toolpanel.</li>
         <li><code>export</code>: Export sub menu (containing csvExport and excelExport).</li>
         <li><code>csvExport</code>: Export to CSV using all default export values.</li>
-        <li><code>excelExport</code>: Export to Excel using all default export values.</li>
+        <li><code>excelExport</code>: Export to Excel (.xlsx) using all default export values.</li>
+        <li><code>excelXMLExport</code>: Export to Excel (.xml) using all default export values.</li>
     </ul>
 
     <h2>Default Context Menu</h2>
@@ -135,15 +135,49 @@ MenuItemDef {
         <li>The second menu item ('Always Disabled') has a tooltip.</li>
     </ul>
 
-    <?= example('Context Menu Example', 'context-menu', 'generated', array("enterprise" => 1)) ?>
+    <?= example('Context Menu Example', 'context-menu', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
 
-    <h2>Popup Parent</h2>
+    <h2 id="popup-parent">Popup Parent</h2>
 
     <p>
-        The popup menu will attach itself directly to <code>document.body</code> and not the main grid. This
-        will allow the menu to overflow outside the grid if the menu is physically larger than the grid.
-        If you want the popup menu to attache to a different parent then set property <code>popupParent</code>
-        to the container (usually a div or span) you want to use as the parent.
+        Under most scenarios, the menu will fit inside the grid. However if the grid is small and / or the menu
+        is very large, then the menu will not fit inside the grid and it will be clipped.
     </p>
+
+    <p>
+        This will lead to a bad user experience which is demonstrated in the following example:
+        <ul>
+            <li>Open the context menu or the column menu in the grid</li>
+            <li>Notice the menu will not be fully visible (i.e. clipped)</li>
+        </ul>
+    </p>
+
+    <?= example('Small Grid Problem', 'popup-parent-problem', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
+
+    <p>
+        The solution is to set the <code>popupParent</code> element which can be set in the following ways:
+        <ul>
+            <li>Property <code>popupParent</code>: Set as a grid property.</li>
+            <li>API <code>setPopupParent(element)</code>: Set via the grid API.</li>
+        </ul>
+        Each mechanism allows you to set the popup parent to any HTML DOM element. The element must:
+        <ol>
+            <li>Exist in the dom.</li>
+            <li>
+                Cover the same area as the grid (or simply be a parent of the grid), so that when the
+                popup is positioned, it can be positioned over the grid.
+            </li>
+        </ol>
+        Most of the time, you will simply set the popup parent to the document body.
+    </p>
+
+    <p>
+        The example below is identical to the previous example except it sets the popup parent
+        to the document body.
+    </p>
+
+    <?= example('Small Grid Solution', 'popup-parent-solution', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
+
+
 
 <?php include '../documentation-main/documentation_footer.php';?>

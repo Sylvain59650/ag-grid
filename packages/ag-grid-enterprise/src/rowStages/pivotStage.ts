@@ -1,6 +1,7 @@
 import {
     Autowired,
     Bean,
+    ChangedPath,
     ColDef,
     ColGroupDef,
     Column,
@@ -10,11 +11,10 @@ import {
     IRowNodeStage,
     RowNode,
     StageExecuteParams,
-    Utils,
     ValueService,
-    ChangedPath
+    _
 } from "ag-grid-community";
-import {PivotColDefService} from "./pivotColDefService";
+import { PivotColDefService } from "./pivotColDefService";
 
 @Bean('pivotStage')
 export class PivotStage implements IRowNodeStage {
@@ -28,15 +28,15 @@ export class PivotStage implements IRowNodeStage {
 
     private uniqueValues: any = {};
 
-    private pivotColumnGroupDefs: (ColDef|ColGroupDef)[];
+    private pivotColumnGroupDefs: (ColDef | ColGroupDef)[];
     private pivotColumnDefs: ColDef[];
 
-    private aggregationColumnsHashLastTime: string;
+    private aggregationColumnsHashLastTime: string | null;
     private aggregationFuncsHashLastTime: string;
 
     public execute(params: StageExecuteParams): void {
-        let rootNode = params.rowNode;
-        let changedPath = params.changedPath;
+        const rootNode = params.rowNode;
+        const changedPath = params.changedPath;
         if (this.columnController.isPivotActive()) {
             this.executePivotOn(rootNode, changedPath);
         } else {
@@ -44,45 +44,49 @@ export class PivotStage implements IRowNodeStage {
         }
     }
 
-    private executePivotOff(changedPath: ChangedPath): void {
+    private executePivotOff(changedPath: ChangedPath | undefined): void {
         this.aggregationColumnsHashLastTime = null;
         this.uniqueValues = {};
         if (this.columnController.isSecondaryColumnsPresent()) {
             this.columnController.setSecondaryColumns(null, "rowModelUpdated");
-            changedPath.setInactive();
+            if (changedPath) {
+                changedPath.setInactive();
+            }
         }
     }
 
-    private executePivotOn(rootNode: RowNode, changedPath: ChangedPath): void {
-        let uniqueValues = this.bucketUpRowNodes(rootNode);
+    private executePivotOn(rootNode: RowNode, changedPath: ChangedPath | undefined): void {
+        const uniqueValues = this.bucketUpRowNodes(rootNode);
 
-        let uniqueValuesChanged = this.setUniqueValues(uniqueValues);
+        const uniqueValuesChanged = this.setUniqueValues(uniqueValues);
 
-        let aggregationColumns = this.columnController.getValueColumns();
-        let aggregationColumnsHash = aggregationColumns.map( (column)=> column.getId() ).join('#');
-        let aggregationFuncsHash = aggregationColumns.map( (column)=> column.getAggFunc().toString() ).join('#');
+        const aggregationColumns = this.columnController.getValueColumns();
+        const aggregationColumnsHash = aggregationColumns.map((column) => column.getId()).join('#');
+        const aggregationFuncsHash = aggregationColumns.map((column) => column.getAggFunc().toString()).join('#');
 
-        let aggregationColumnsChanged = this.aggregationColumnsHashLastTime !== aggregationColumnsHash;
-        let aggregationFuncsChanged = this.aggregationFuncsHashLastTime !== aggregationFuncsHash;
+        const aggregationColumnsChanged = this.aggregationColumnsHashLastTime !== aggregationColumnsHash;
+        const aggregationFuncsChanged = this.aggregationFuncsHashLastTime !== aggregationFuncsHash;
         this.aggregationColumnsHashLastTime = aggregationColumnsHash;
         this.aggregationFuncsHashLastTime = aggregationFuncsHash;
 
         if (uniqueValuesChanged || aggregationColumnsChanged || aggregationFuncsChanged) {
-            let result = this.pivotColDefService.createPivotColumnDefs(this.uniqueValues);
+            const result = this.pivotColDefService.createPivotColumnDefs(this.uniqueValues);
             this.pivotColumnGroupDefs = result.pivotColumnGroupDefs;
             this.pivotColumnDefs = result.pivotColumnDefs;
             this.columnController.setSecondaryColumns(this.pivotColumnGroupDefs, "rowModelUpdated");
             // because the secondary columns have changed, then the aggregation needs to visit the whole
             // tree again, so we make the changedPath not active, to force aggregation to visit all paths.
-            changedPath.setInactive();
+            if (changedPath) {
+                changedPath.setInactive();
+            }
         }
     }
 
     private setUniqueValues(newValues: any): boolean {
-        let json1 = JSON.stringify(newValues);
-        let json2 = JSON.stringify(this.uniqueValues);
+        const json1 = JSON.stringify(newValues);
+        const json2 = JSON.stringify(this.uniqueValues);
 
-        let uniqueValuesChanged = json1 !== json2;
+        const uniqueValuesChanged = json1 !== json2;
 
         // we only continue the below if the unique values are different, as otherwise
         // the result will be the same as the last time we did it
@@ -98,14 +102,14 @@ export class PivotStage implements IRowNodeStage {
     private bucketUpRowNodes(rootNode: RowNode): any {
 
         // accessed from inside inner function
-        let uniqueValues: any = {};
+        const uniqueValues: any = {};
 
         // finds all leaf groups and calls mapRowNode with it
-        let recursivelySearchForLeafNodes = (rowNode: RowNode) => {
+        const recursivelySearchForLeafNodes = (rowNode: RowNode) => {
             if (rowNode.leafGroup) {
                 this.bucketRowNode(rowNode, uniqueValues);
             } else {
-                rowNode.childrenAfterFilter.forEach( child => {
+                rowNode.childrenAfterFilter.forEach(child => {
                     recursivelySearchForLeafNodes(child);
                 });
             }
@@ -118,9 +122,9 @@ export class PivotStage implements IRowNodeStage {
 
     private bucketRowNode(rowNode: RowNode, uniqueValues: any): void {
 
-        let pivotColumns = this.columnController.getPivotColumns();
+        const pivotColumns = this.columnController.getPivotColumns();
 
-        if (pivotColumns.length===0) {
+        if (pivotColumns.length === 0) {
             rowNode.childrenMapped = null;
             return;
         }
@@ -130,15 +134,15 @@ export class PivotStage implements IRowNodeStage {
 
     private bucketChildren(children: RowNode[], pivotColumns: Column[], pivotIndex: number, uniqueValues: any): any {
 
-        let mappedChildren: any = {};
-        let pivotColumn = pivotColumns[pivotIndex];
+        const mappedChildren: any = {};
+        const pivotColumn = pivotColumns[pivotIndex];
 
         // map the children out based on the pivot column
-        children.forEach( (child: RowNode) => {
+        children.forEach((child: RowNode) => {
 
             let key: string = this.valueService.getKeyForNode(pivotColumn, child);
 
-            if (Utils.missing(key)) {
+            if (_.missing(key)) {
                 key = '';
             }
 
@@ -153,12 +157,12 @@ export class PivotStage implements IRowNodeStage {
         });
 
         // if it's the last pivot column, return as is, otherwise go one level further in the map
-        if (pivotIndex === pivotColumns.length-1) {
+        if (pivotIndex === pivotColumns.length - 1) {
             return mappedChildren;
         } else {
-            let result: any = {};
+            const result: any = {};
 
-            Utils.iterateObject(mappedChildren, (key: string, value: RowNode[])=> {
+            _.iterateObject(mappedChildren, (key: string, value: RowNode[]) => {
                 result[key] = this.bucketChildren(value, pivotColumns, pivotIndex + 1, uniqueValues[key]);
             });
 

@@ -1,15 +1,15 @@
 import {
-    Component,
-    CellRendererService,
-    ValueFormatterService,
-    Autowired,
-    PostConstruct,
-    GridOptionsWrapper,
-    _,
-    Column,
     AgEvent,
+    Autowired,
+    CellRendererService,
+    Column,
+    Component,
+    GridOptionsWrapper,
+    ICellRendererComp,
+    PostConstruct,
     Promise,
-    ICellRendererComp
+    ValueFormatterService,
+    _
 } from "ag-grid-community";
 
 export interface SelectedEvent extends AgEvent {
@@ -56,11 +56,11 @@ export class SetFilterListItem extends Component {
         this.updateCheckboxIcon();
         this.render();
 
-        let listener = (mouseEvent: MouseEvent) => {
+        const listener = (mouseEvent: MouseEvent) => {
             _.addAgGridEventPath(mouseEvent);
             this.selected = !this.selected;
             this.updateCheckboxIcon();
-            let event: SelectedEvent = {
+            const event: SelectedEvent = {
                 type: SetFilterListItem.EVENT_SELECTED
             };
             return this.dispatchEvent(event);
@@ -78,11 +78,7 @@ export class SetFilterListItem extends Component {
     }
 
     private updateCheckboxIcon() {
-        if (this.eCheckbox.children) {
-            for (let i=0; i<this.eCheckbox.children.length; i++) {
-                this.eCheckbox.removeChild(this.eCheckbox.children.item(i));
-            }
-        }
+        _.clearElement(this.eCheckbox);
 
         if (this.isSelected()) {
             this.eCheckbox.appendChild(this.eCheckedIcon);
@@ -92,15 +88,15 @@ export class SetFilterListItem extends Component {
     }
 
     public render(): void {
-        let valueElement = this.queryForHtmlElement(".ag-filter-value");
-        let valueFormatted = this.valueFormatterService.formatValue(this.column, null, null, this.value);
+        const valueElement = this.queryForHtmlElement(".ag-filter-value");
+        const valueFormatted = this.valueFormatterService.formatValue(this.column, null, null, this.value);
 
-        let colDef = this.column.getColDef();
-        let valueObj = {value: this.value, valueFormatted: valueFormatted};
+        const colDef = this.column.getColDef();
+        const valueObj = {value: this.value, valueFormatted: valueFormatted};
 
-        let componentPromise:Promise<ICellRendererComp> = this.cellRendererService.useFilterCellRenderer(colDef, valueElement, valueObj);
+        const componentPromise: Promise<ICellRendererComp> = this.cellRendererService.useFilterCellRenderer(colDef, valueElement, valueObj);
 
-        if (!componentPromise) return;
+        if (!componentPromise) { return; }
 
         componentPromise.then(component => {
             if (component && component.destroy) {

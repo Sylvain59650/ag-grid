@@ -11,7 +11,7 @@ $version = 'latest';
 <head>
 <?php
 $title = 'ag-Grid: Datagrid packed with features that your users need with the performance you expect.';
-$description = 'ag-Grid is feature rich datagrid designed for the major JavaScript Frameworks. Version 18 is out now. Easily integrate into your application to deliver filtering, grouping, aggregation, pivoting and much more with the performance that your users expect. Our Community version is free and open source or take a 2 month trial of ag-Grid Enterprise.';
+$description = 'ag-Grid is feature rich datagrid designed for the major JavaScript Frameworks. Version 19 is out now. Easily integrate into your application to deliver filtering, grouping, aggregation, pivoting and much more with the performance that your users expect. Our Community version is free and open source or take a 2 month trial of ag-Grid Enterprise.';
 meta_and_links($title, $keywords, $description, false);
 ?>
 
@@ -67,7 +67,7 @@ meta_and_links($title, $keywords, $description, false);
     <div id="stage-frameworks">
         <section id="news-flash">
             <div>
-                30th Oct 2018: <a href="./ag-grid-changelog/?fixVersion=19.1.0">Version 19.1.1</a> released with Polymer 3 support, XLSL Export, Delta Columns and bug fixes
+                11th Jan 2019: <a href="./ag-grid-changelog/?fixVersion=20.0.0">Version 20.0.0</a> Server Side Master Detail, Vue.js improvements and bug fixes
             </div>
         </section>
 

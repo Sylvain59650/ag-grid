@@ -1,5 +1,5 @@
-// ag-grid-enterprise v19.1.1
-import { Component, EventService, GridOptionsWrapper, Context, LoggerFactory, DragAndDropService, Column } from "ag-grid-community/main";
+// ag-grid-enterprise v20.0.0
+import { Column, Component, Context, DragAndDropService, EventService, GridOptionsWrapper, LoggerFactory } from "ag-grid-community/main";
 export interface BaseDropZonePanelParams {
     dragAndDropIcon: string;
     emptyMessage: string;
@@ -64,4 +64,3 @@ export declare abstract class BaseDropZonePanel extends Component {
     private addEmptyMessageToGui;
     private addArrow;
 }
-//# sourceMappingURL=baseDropZonePanel.d.ts.map

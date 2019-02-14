@@ -1,15 +1,15 @@
-import {RowNode} from "./rowNode";
-import {GridApi} from "../gridApi";
-import {ColumnApi} from "../columnController/columnApi";
-import {Column} from "./column";
-import {IViewportDatasource} from "../interfaces/iViewportDatasource";
-import {ICellRendererComp, ICellRendererFunc} from "../rendering/cellRenderers/iCellRenderer";
-import {ColDef, ColGroupDef, IAggFunc} from "./colDef";
-import {IDatasource} from "../rowModels/iDatasource";
-import {GridCellDef} from "./gridCell";
-import {IDateComp} from "../rendering/dateComponent";
-import {IServerSideDatasource} from "../interfaces/iServerSideDatasource";
-import {CsvExportParams, ProcessCellForExportParams, ProcessHeaderForExportParams} from "../exporter/exportParams";
+import { RowNode } from "./rowNode";
+import { GridApi } from "../gridApi";
+import { ColumnApi } from "../columnController/columnApi";
+import { Column } from "./column";
+import { IViewportDatasource } from "../interfaces/iViewportDatasource";
+import { ICellRendererComp, ICellRendererFunc } from "../rendering/cellRenderers/iCellRenderer";
+import { ColDef, ColGroupDef, IAggFunc } from "./colDef";
+import { IDatasource } from "../rowModels/iDatasource";
+import { GridCellDef } from "./gridCell";
+import { IDateComp } from "../rendering/dateComponent";
+import { IServerSideDatasource } from "../interfaces/iServerSideDatasource";
+import { CsvExportParams, ProcessCellForExportParams, ProcessHeaderForExportParams } from "../exporter/exportParams";
 import {
     BodyScrollEvent,
     CellClickedEvent,
@@ -39,15 +39,17 @@ import {
     DisplayedColumnsChangedEvent,
     DragStartedEvent,
     DragStoppedEvent,
+    ExpandCollapseAllEvent,
     FilterChangedEvent,
     FilterModifiedEvent,
+    FirstDataRenderedEvent,
     GridColumnsChangedEvent,
     GridReadyEvent,
     ModelUpdatedEvent,
     NewColumnsLoadedEvent,
     PaginationChangedEvent,
-    PasteStartEvent,
     PasteEndEvent,
+    PasteStartEvent,
     PinnedRowDataChangedEvent,
     RangeSelectionChangedEvent,
     RowClickedEvent,
@@ -64,16 +66,14 @@ import {
     SortChangedEvent,
     ViewportChangedEvent,
     VirtualColumnsChangedEvent,
-    VirtualRowRemovedEvent,
-    FirstDataRenderedEvent,
-    ExpandCollapseAllEvent
+    VirtualRowRemovedEvent
 } from "../events";
-import {IComponent} from "../interfaces/iComponent";
-import {AgGridRegisteredComponentInput} from "../components/framework/componentProvider";
-import {ILoadingOverlayComp} from "../rendering/overlays/loadingOverlayComponent";
-import {INoRowsOverlayComp} from "../rendering/overlays/noRowsOverlayComponent";
-import {StatusPanelDef} from "../interfaces/iStatusPanel";
-import {SideBarDef} from "./sideBar";
+import { IComponent } from "../interfaces/iComponent";
+import { AgGridRegisteredComponentInput } from "../components/framework/componentProvider";
+import { ILoadingOverlayComp } from "../rendering/overlays/loadingOverlayComponent";
+import { INoRowsOverlayComp } from "../rendering/overlays/noRowsOverlayComponent";
+import { StatusPanelDef } from "../interfaces/iStatusPanel";
+import { SideBarDef } from "./sideBar";
 
 /****************************************************************
  * Don't forget to update ComponentUtil if changing this class. *
@@ -106,18 +106,20 @@ export interface GridOptions {
     suppressMultiSort?: boolean;
     multiSortKey?: string;
     accentedSort?: boolean;
+    deltaSort?: boolean;
     suppressHorizontalScroll?: boolean;
+    alwaysShowVerticalScroll?: boolean;
     suppressTabbing?: boolean;
     unSortIcon?: boolean;
     rowBuffer?: number;
     enableRtl?: boolean;
-    enableColResize?: boolean;
+    enableColResize?: boolean; // deprecated in v20, use colDef.resizable instead
     colResizeDefault?: string;
     enableCellExpressions?: boolean;
-    enableSorting?: boolean;
-    enableServerSideSorting?: boolean;
-    enableFilter?: boolean;
-    enableServerSideFilter?: boolean;
+    enableSorting?: boolean; // deprecated in v20, use colDef.sortable instead
+    enableServerSideSorting?: boolean; // deprecated in v20, use colDef.sortable instead
+    enableFilter?: boolean; // deprecated in v20, use colDef.filter = true instead
+    enableServerSideFilter?: boolean; // deprecated in v20, use colDef.filter = true instead
     enableGroupEdit?: boolean;
     enterMovesDownAfterEdit?: boolean;
     enterMovesDown?: boolean;
@@ -145,6 +147,7 @@ export interface GridOptions {
     suppressParentsInRowNodes?: boolean;
     suppressFieldDotNotation?: boolean;
     suppressCopyRowsToClipboard?: boolean;
+    copyHeadersToClipboard?: boolean;
     clipboardDeliminator?: string;
     suppressClipboardPaste?: boolean;
     suppressAggFuncInHeader?: boolean;
@@ -169,7 +172,7 @@ export interface GridOptions {
     enableCellChangeFlash?: boolean;
     quickFilterText?: string;
     cacheQuickFilter?: boolean;
-    aggFuncs?: {[key: string]: IAggFunc};
+    aggFuncs?: { [key: string]: IAggFunc };
     suppressColumnVirtualisation?: boolean;
     functionsReadOnly?: boolean;
     functionsPassive?: boolean;
@@ -215,13 +218,10 @@ export interface GridOptions {
     suppressPropertyNamesCheck?: boolean;
     serverSideSortingAlwaysResets?: boolean;
 
-    // manually supply the redux store - only really necessary if using redux and portals
-    // (in which case reactNext should probably be true...)
-    reduxStore?:  any;
     // in effect whether or not to use React Portals for processing React Components within the grid
-    reactNext?:  boolean;
+    reactNext?: boolean;
 
-    statusBar? : {
+    statusBar?: {
         statusPanels: StatusPanelDef[]
     };
 
@@ -262,6 +262,7 @@ export interface GridOptions {
     autoGroupColumnDef?: ColDef;
     forPrint?: boolean;
     enableOldSetFilterModel?: boolean;
+    enableCharts?: boolean;
 
     /****************************************************************
      * Don't forget to update ComponentUtil if changing this class. *
@@ -286,7 +287,7 @@ export interface GridOptions {
 
     masterDetail?: boolean;
     isRowMaster?: IsRowMaster;
-    detailCellRenderer?: {new(): ICellRendererComp} | ICellRendererFunc | string;
+    detailCellRenderer?: { new(): ICellRendererComp } | ICellRendererFunc | string;
     detailCellRendererFramework?: any;
     detailCellRendererParams?: any;
 
@@ -300,8 +301,8 @@ export interface GridOptions {
     pinnedBottomRowData?: any[];
     showToolPanel?: boolean; //deprecated
     sideBar?: SideBarDef | string | boolean;
-    columnDefs?: (ColDef|ColGroupDef)[];
-    columnTypes?: {[key: string]: ColDef};
+    columnDefs?: (ColDef | ColGroupDef)[];
+    columnTypes?: { [key: string]: ColDef };
     datasource?: IDatasource;
     viewportDatasource?: IViewportDatasource;
     serverSideDatasource?: IServerSideDatasource;
@@ -318,42 +319,48 @@ export interface GridOptions {
      ****************************************************************/
 
     // callbacks
-    paginationNumberFormatter?: (params: PaginationNumberFormatterParams)=>string;
-    postProcessPopup?: (params: PostProcessPopupParams)=>void;
-    frameworkComponents?: {[p: string]: {new(): any}} | any;
-    components?: {[p: string]: AgGridRegisteredComponentInput<IComponent<any>>};
-    dateComponent?: {new(): IDateComp};
+    paginationNumberFormatter?: (params: PaginationNumberFormatterParams) => string;
+    postProcessPopup?: (params: PostProcessPopupParams) => void;
+    frameworkComponents?: { [p: string]: { new(): any } } | any;
+    components?: { [p: string]: AgGridRegisteredComponentInput<IComponent<any>> };
+    dateComponent?: { new(): IDateComp };
     dateComponentFramework?: any;
-    groupRowRenderer?: {new(): ICellRendererComp} | ICellRendererFunc | string;
+    groupRowRenderer?: { new(): ICellRendererComp } | ICellRendererFunc | string;
     groupRowRendererFramework?: any;
     groupRowRendererParams?: any;
-    groupRowInnerRenderer?: {new(): ICellRendererComp} | ICellRendererFunc | string;
+    groupRowInnerRenderer?: { new(): ICellRendererComp } | ICellRendererFunc | string;
     groupRowInnerRendererFramework?: any;
+
     isExternalFilterPresent?(): boolean;
+
     doesExternalFilterPass?(node: RowNode): boolean;
+
     getRowStyle?: Function;
     getRowClass?: (params: any) => (string | string[]);
     rowClassRules?: { [cssClassName: string]: (((params: any) => boolean) | string) };
     getRowHeight?: Function;
-    sendToClipboard?: (params: any)=>void;
-    processDataFromClipboard?: (params: ProcessDataFromClipboardParams)=>string[][];
-    navigateToNextCell?: (params: NavigateToNextCellParams)=>GridCellDef;
-    tabToNextCell?: (params: TabToNextCellParams)=>GridCellDef;
-    getDocument?: ()=> Document;
+    sendToClipboard?: (params: any) => void;
+    processDataFromClipboard?: (params: ProcessDataFromClipboardParams) => string[][] | null;
+    navigateToNextCell?: (params: NavigateToNextCellParams) => GridCellDef;
+    tabToNextCell?: (params: TabToNextCellParams) => GridCellDef;
+    getDocument?: () => Document;
     defaultGroupSortComparator?: (nodeA: RowNode, nodeB: RowNode) => number;
 
-    loadingOverlayComponent?: {new(): ILoadingOverlayComp} | string;
+    loadingOverlayComponent?: { new(): ILoadingOverlayComp } | string;
     loadingOverlayComponentFramework?: any;
-    noRowsOverlayComponent?: {new(): INoRowsOverlayComp} | string;
+    noRowsOverlayComponent?: { new(): INoRowsOverlayComp } | string;
     noRowsOverlayComponentFramework?: any;
 
-    fullWidthCellRenderer?: {new(): ICellRendererComp} | ICellRendererFunc | string;
+    fullWidthCellRenderer?: { new(): ICellRendererComp } | ICellRendererFunc | string;
     fullWidthCellRendererFramework?: any;
     fullWidthCellRendererParams?: any;
+
     isFullWidthCell?(rowNode: RowNode): boolean;
 
     groupRowAggNodes?(nodes: RowNode[]): any;
+
     getBusinessKeyForNode?(node: RowNode): string;
+
     getNodeChildDetails?: GetNodeChildDetails;
     getDataPath?: GetDataPath;
     treeData?: boolean;
@@ -362,14 +369,23 @@ export interface GridOptions {
     getContextMenuItems?: GetContextMenuItems;
     getMainMenuItems?: GetMainMenuItems;
     getRowNodeId?: GetRowNodeIdFunc;
+
     getChildCount?(dataItem: any): number;
+
     doesDataFlower?(dataItem: any): boolean;
+
     processRowPostCreate?(params: ProcessRowParams): void;
+
     processCellForClipboard?(params: ProcessCellForExportParams): any;
+
     processHeaderForClipboard?(params: ProcessHeaderForExportParams): any;
+
     processCellFromClipboard?(params: ProcessCellForExportParams): any;
+
     processSecondaryColDef?(colDef: ColDef): void;
+
     processSecondaryColGroupDef?(colGroupDef: ColGroupDef): void;
+
     postSort?(nodes: RowNode[]): void;
 
     /****************************************************************
@@ -378,64 +394,123 @@ export interface GridOptions {
 
     // events
     onColumnEverythingChanged?(event: ColumnEverythingChangedEvent): void;
+
     onNewColumnsLoaded?(event: NewColumnsLoadedEvent): void;
+
     onColumnPivotModeChanged?(event: ColumnPivotModeChangedEvent): void;
+
     onColumnRowGroupChanged?(event: ColumnRowGroupChangedEvent): void;
+
     onColumnPivotChanged?(event: ColumnPivotChangedEvent): void;
+
     onGridColumnsChanged?(event: GridColumnsChangedEvent): void;
+
     onColumnValueChanged?(event: ColumnValueChangedEvent): void;
+
     onColumnMoved?(event: ColumnMovedEvent): void;
+
     onColumnVisible?(event: ColumnVisibleEvent): void;
+
     onColumnPinned?(event: ColumnPinnedEvent): void;
+
     onColumnGroupOpened?(event: ColumnGroupOpenedEvent): void;
+
     onColumnResized?(event: ColumnResizedEvent): void;
+
     onDisplayedColumnsChanged?(event: DisplayedColumnsChangedEvent): void;
+
     onVirtualColumnsChanged?(event: VirtualColumnsChangedEvent): void;
+
     onRowGroupOpened?(event: RowGroupOpenedEvent): void;
+
     onRowDataChanged?(event: RowDataChangedEvent): void;
+
     onRowDataUpdated?(event: RowDataUpdatedEvent): void;
+
     onPinnedRowDataChanged?(event: PinnedRowDataChangedEvent): void;
+
     onRangeSelectionChanged?(event: RangeSelectionChangedEvent): void;
+
     onColumnRowGroupChangeRequest?(event: ColumnRowGroupChangeRequestEvent): void;
+
     onColumnPivotChangeRequest?(event: ColumnPivotChangeRequestEvent): void;
+
     onColumnValueChangeRequest?(event: ColumnValueChangeRequestEvent): void;
+
     onColumnAggFuncChangeRequest?(event: ColumnAggFuncChangeRequestEvent): void;
+
     onModelUpdated?(event: ModelUpdatedEvent): void;
+
     onCellClicked?(event: CellClickedEvent): void;
+
     onCellMouseDown?(event: CellMouseDownEvent): void;
+
     onCellDoubleClicked?(event: CellDoubleClickedEvent): void;
+
     onCellContextMenu?(event: CellContextMenuEvent): void;
+
     onCellValueChanged?(event: CellValueChangedEvent): void;
+
     onCellMouseOver?(event: CellMouseOverEvent): void;
+
     onCellMouseOut?(event: CellMouseOutEvent): void;
+
     onRowValueChanged?(event: RowValueChangedEvent): void;
+
     onRowEditingStarted?(event: RowEditingStartedEvent): void;
+
     onRowEditingStopped?(event: RowEditingStoppedEvent): void;
+
     onCellEditingStarted?(event: CellEditingStartedEvent): void;
+
     onCellEditingStopped?(event: CellEditingStoppedEvent): void;
+
     onCellFocused?(event: CellFocusedEvent): void;
+
     onRowSelected?(event: RowSelectedEvent): void;
+
     onSelectionChanged?(event: SelectionChangedEvent): void;
+
     onFilterChanged?(event: FilterChangedEvent): void;
+
     onFilterModified?(event: FilterModifiedEvent): void;
+
     onSortChanged?(event: SortChangedEvent): void;
+
     onVirtualRowRemoved?(event: VirtualRowRemovedEvent): void;
+
     onRowClicked?(event: RowClickedEvent): void;
+
     onRowDoubleClicked?(event: RowDoubleClickedEvent): void;
+
     onGridReady?(event: GridReadyEvent): void;
+
     onViewportChanged?(event: ViewportChangedEvent): void;
+
     onDragStarted?(event: DragStartedEvent): void;
+
     onDragStopped?(event: DragStoppedEvent): void;
+
     onPaginationChanged?(event: PaginationChangedEvent): void;
+
     onRowDragEnter?(event: RowDragEvent): void;
+
     onRowDragMove?(event: RowDragEvent): void;
+
     onRowDragLeave?(event: RowDragEvent): void;
+
     onRowDragEnd?(event: RowDragEvent): void;
+
     onPasteStart?(event: PasteStartEvent): void;
+
     onPasteEnd?(event: PasteEndEvent): void;
+
     onBodyScroll?(event: BodyScrollEvent): void;
+
     onFirstDataRendered?(event: FirstDataRenderedEvent): void;
+
     onExpandOrCollapseAll?(event: ExpandCollapseAllEvent): void;
+
     // deprecated
     onGridSizeChanged?(event: any): void;
 
@@ -444,8 +519,8 @@ export interface GridOptions {
      ****************************************************************/
 
     // apis, set by the grid on init
-    api?: GridApi; // change to typed
-    columnApi?: ColumnApi; // change to typed
+    api?: GridApi | null; // change to typed
+    columnApi?: ColumnApi | null; // change to typed
 }
 
 export interface GetDataPath {
@@ -481,41 +556,41 @@ export interface NodeChildDetails {
 }
 
 export interface GetContextMenuItemsParams {
-    defaultItems: string[];
+    defaultItems: string[] | undefined;
     column: Column;
     node: RowNode;
     value: any;
-    api: GridApi;
-    columnApi: ColumnApi;
+    api: GridApi | null | undefined;
+    columnApi: ColumnApi | null | undefined;
     context: any;
 }
 
 export interface GetContextMenuItems {
-    (params: GetContextMenuItemsParams): (string|MenuItemDef)[];
+    (params: GetContextMenuItemsParams): (string | MenuItemDef)[];
 }
 
 export interface MenuItemDef {
     name: string;
     disabled?: boolean;
     shortcut?: string;
-    action?: ()=>void;
+    action?: () => void;
     checked?: boolean;
-    icon?: HTMLElement|string;
-    subMenu?: (MenuItemDef|string)[];
+    icon?: HTMLElement | string;
+    subMenu?: (MenuItemDef | string)[];
     cssClasses?: string[];
     tooltip?: string;
 }
 
 export interface GetMainMenuItemsParams {
     column: Column;
-    api: GridApi;
-    columnApi: ColumnApi;
+    api: GridApi | null | undefined;
+    columnApi: ColumnApi | null | undefined;
     context: any;
     defaultItems: string[];
 }
 
 export interface GetMainMenuItems {
-    (params: GetMainMenuItemsParams): (string|MenuItemDef)[];
+    (params: GetMainMenuItemsParams): (string | MenuItemDef)[];
 }
 
 export interface GetRowNodeIdFunc {
@@ -530,7 +605,7 @@ export interface ProcessRowParams {
     node: RowNode;
     api: GridApi;
     columnApi: ColumnApi;
-    addRenderedRowListener: (eventType: string, listener: Function)=>void;
+    addRenderedRowListener: (eventType: string, listener: Function) => void;
     context: any;
 }
 
@@ -550,17 +625,17 @@ export interface TabToNextCellParams {
 
 export interface PostProcessPopupParams {
     // if popup is for a column, this gives the Column
-    column?: Column;
+    column?: Column | null;
     // if popup is for a row, this gives the RowNode
     rowNode?: RowNode;
     // the popup we are showing
-    ePopup: HTMLElement;
+    ePopup: HTMLElement | null;
     // The different types are: 'contextMenu', 'columnMenu', 'aggFuncSelect', 'popupCellEditor'
     type: string;
     // if the popup is as a result of a button click (eg menu button), this is the component that the user clicked
-    eventSource?: HTMLElement;
+    eventSource?: HTMLElement | null;
     // if the popup is as a result of a click or touch, this is the event - eg user showing context menu
-    mouseEvent?: MouseEvent|Touch;
+    mouseEvent?: MouseEvent | Touch | null;
 }
 
 export interface PaginationNumberFormatterParams {

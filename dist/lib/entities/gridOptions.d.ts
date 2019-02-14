@@ -1,4 +1,4 @@
-// Type definitions for ag-grid-community v19.1.1
+// Type definitions for ag-grid-community v20.0.0
 // Project: http://www.ag-grid.com/
 // Definitions by: Niall Crosby <https://github.com/ag-grid/>
 import { RowNode } from "./rowNode";
@@ -13,7 +13,7 @@ import { GridCellDef } from "./gridCell";
 import { IDateComp } from "../rendering/dateComponent";
 import { IServerSideDatasource } from "../interfaces/iServerSideDatasource";
 import { CsvExportParams, ProcessCellForExportParams, ProcessHeaderForExportParams } from "../exporter/exportParams";
-import { BodyScrollEvent, CellClickedEvent, CellContextMenuEvent, CellDoubleClickedEvent, CellEditingStartedEvent, CellEditingStoppedEvent, CellFocusedEvent, CellMouseDownEvent, CellMouseOutEvent, CellMouseOverEvent, CellValueChangedEvent, ColumnAggFuncChangeRequestEvent, ColumnEverythingChangedEvent, ColumnGroupOpenedEvent, ColumnMovedEvent, ColumnPinnedEvent, ColumnPivotChangedEvent, ColumnPivotChangeRequestEvent, ColumnPivotModeChangedEvent, ColumnResizedEvent, ColumnRowGroupChangedEvent, ColumnRowGroupChangeRequestEvent, ColumnValueChangedEvent, ColumnValueChangeRequestEvent, ColumnVisibleEvent, DisplayedColumnsChangedEvent, DragStartedEvent, DragStoppedEvent, FilterChangedEvent, FilterModifiedEvent, GridColumnsChangedEvent, GridReadyEvent, ModelUpdatedEvent, NewColumnsLoadedEvent, PaginationChangedEvent, PasteStartEvent, PasteEndEvent, PinnedRowDataChangedEvent, RangeSelectionChangedEvent, RowClickedEvent, RowDataChangedEvent, RowDataUpdatedEvent, RowDoubleClickedEvent, RowDragEvent, RowEditingStartedEvent, RowEditingStoppedEvent, RowGroupOpenedEvent, RowSelectedEvent, RowValueChangedEvent, SelectionChangedEvent, SortChangedEvent, ViewportChangedEvent, VirtualColumnsChangedEvent, VirtualRowRemovedEvent, FirstDataRenderedEvent, ExpandCollapseAllEvent } from "../events";
+import { BodyScrollEvent, CellClickedEvent, CellContextMenuEvent, CellDoubleClickedEvent, CellEditingStartedEvent, CellEditingStoppedEvent, CellFocusedEvent, CellMouseDownEvent, CellMouseOutEvent, CellMouseOverEvent, CellValueChangedEvent, ColumnAggFuncChangeRequestEvent, ColumnEverythingChangedEvent, ColumnGroupOpenedEvent, ColumnMovedEvent, ColumnPinnedEvent, ColumnPivotChangedEvent, ColumnPivotChangeRequestEvent, ColumnPivotModeChangedEvent, ColumnResizedEvent, ColumnRowGroupChangedEvent, ColumnRowGroupChangeRequestEvent, ColumnValueChangedEvent, ColumnValueChangeRequestEvent, ColumnVisibleEvent, DisplayedColumnsChangedEvent, DragStartedEvent, DragStoppedEvent, ExpandCollapseAllEvent, FilterChangedEvent, FilterModifiedEvent, FirstDataRenderedEvent, GridColumnsChangedEvent, GridReadyEvent, ModelUpdatedEvent, NewColumnsLoadedEvent, PaginationChangedEvent, PasteEndEvent, PasteStartEvent, PinnedRowDataChangedEvent, RangeSelectionChangedEvent, RowClickedEvent, RowDataChangedEvent, RowDataUpdatedEvent, RowDoubleClickedEvent, RowDragEvent, RowEditingStartedEvent, RowEditingStoppedEvent, RowGroupOpenedEvent, RowSelectedEvent, RowValueChangedEvent, SelectionChangedEvent, SortChangedEvent, ViewportChangedEvent, VirtualColumnsChangedEvent, VirtualRowRemovedEvent } from "../events";
 import { IComponent } from "../interfaces/iComponent";
 import { AgGridRegisteredComponentInput } from "../components/framework/componentProvider";
 import { ILoadingOverlayComp } from "../rendering/overlays/loadingOverlayComponent";
@@ -48,7 +48,9 @@ export interface GridOptions {
     suppressMultiSort?: boolean;
     multiSortKey?: string;
     accentedSort?: boolean;
+    deltaSort?: boolean;
     suppressHorizontalScroll?: boolean;
+    alwaysShowVerticalScroll?: boolean;
     suppressTabbing?: boolean;
     unSortIcon?: boolean;
     rowBuffer?: number;
@@ -87,6 +89,7 @@ export interface GridOptions {
     suppressParentsInRowNodes?: boolean;
     suppressFieldDotNotation?: boolean;
     suppressCopyRowsToClipboard?: boolean;
+    copyHeadersToClipboard?: boolean;
     clipboardDeliminator?: string;
     suppressClipboardPaste?: boolean;
     suppressAggFuncInHeader?: boolean;
@@ -150,7 +153,6 @@ export interface GridOptions {
     maxColWidth?: number;
     suppressPropertyNamesCheck?: boolean;
     serverSideSortingAlwaysResets?: boolean;
-    reduxStore?: any;
     reactNext?: boolean;
     statusBar?: {
         statusPanels: StatusPanelDef[];
@@ -183,6 +185,7 @@ export interface GridOptions {
     autoGroupColumnDef?: ColDef;
     forPrint?: boolean;
     enableOldSetFilterModel?: boolean;
+    enableCharts?: boolean;
     /****************************************************************
      * Don't forget to update ComponentUtil if changing this class. *
      ****************************************************************/
@@ -263,7 +266,7 @@ export interface GridOptions {
     };
     getRowHeight?: Function;
     sendToClipboard?: (params: any) => void;
-    processDataFromClipboard?: (params: ProcessDataFromClipboardParams) => string[][];
+    processDataFromClipboard?: (params: ProcessDataFromClipboardParams) => string[][] | null;
     navigateToNextCell?: (params: NavigateToNextCellParams) => GridCellDef;
     tabToNextCell?: (params: TabToNextCellParams) => GridCellDef;
     getDocument?: () => Document;
@@ -367,8 +370,8 @@ export interface GridOptions {
     /****************************************************************
      * Don't forget to update ComponentUtil if changing this class. *
      ****************************************************************/
-    api?: GridApi;
-    columnApi?: ColumnApi;
+    api?: GridApi | null;
+    columnApi?: ColumnApi | null;
 }
 export interface GetDataPath {
     (data: any): string[];
@@ -396,12 +399,12 @@ export interface NodeChildDetails {
     key?: any;
 }
 export interface GetContextMenuItemsParams {
-    defaultItems: string[];
+    defaultItems: string[] | undefined;
     column: Column;
     node: RowNode;
     value: any;
-    api: GridApi;
-    columnApi: ColumnApi;
+    api: GridApi | null | undefined;
+    columnApi: ColumnApi | null | undefined;
     context: any;
 }
 export interface GetContextMenuItems {
@@ -420,8 +423,8 @@ export interface MenuItemDef {
 }
 export interface GetMainMenuItemsParams {
     column: Column;
-    api: GridApi;
-    columnApi: ColumnApi;
+    api: GridApi | null | undefined;
+    columnApi: ColumnApi | null | undefined;
     context: any;
     defaultItems: string[];
 }
@@ -455,12 +458,12 @@ export interface TabToNextCellParams {
     nextCellDef: GridCellDef;
 }
 export interface PostProcessPopupParams {
-    column?: Column;
+    column?: Column | null;
     rowNode?: RowNode;
-    ePopup: HTMLElement;
+    ePopup: HTMLElement | null;
     type: string;
-    eventSource?: HTMLElement;
-    mouseEvent?: MouseEvent | Touch;
+    eventSource?: HTMLElement | null;
+    mouseEvent?: MouseEvent | Touch | null;
 }
 export interface PaginationNumberFormatterParams {
     value: number;
@@ -468,4 +471,3 @@ export interface PaginationNumberFormatterParams {
 export interface ProcessDataFromClipboardParams {
     data: string[][];
 }
-//# sourceMappingURL=gridOptions.d.ts.map

@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "Excel Export: Enterprise Grade Feature of our Datagrid";
-$pageDescription = "ag-Grid is a feature-rich data grid supporting major JavaScript Frameworks. One such feature is Excel Export. Export in native Excel Format which will maintain the column widths and also allow exporting of styles. Version 17 is available for download now, take it for a free two month trial.";
+$pageDescription = "ag-Grid is a feature-rich data grid supporting major JavaScript Frameworks. One such feature is Excel Export. Export in native Excel Format which will maintain the column widths and also allow exporting of styles. Version 20 is available for download now, take it for a free two month trial.";
 $pageKeyboards = "JavaScript Grid Excel";
 $pageGroup = "feature";
 include '../documentation-main/documentation_header.php';
@@ -35,8 +35,14 @@ include '../documentation-main/documentation_header.php';
         </p>
 
         <ul class="content">
-            <li><code>exportDataAsExcel(params)</code>: Does the full export and triggers the download of the file in the browser automatically so the user can open immediately.</li>
-            <li><code>getDataAsExcel(params)</code>: Returns the Excel XML that represents the export performed by <code>exportDataAsExcel(params)</code>. This can then be used by your web application, e.g. to send the data to the server for storing or sending via email etc.</li>
+            <li>
+                <code>exportDataAsExcel(params)</code>: Does the full export and triggers the download of the file in the browser automatically so the user can open immediately.
+            </li>
+            <li>
+                <code>getDataAsExcel(params)</code>: Returns the Excel XML that represents the export performed by <code>exportDataAsExcel(params)</code>. 
+                <br/>This can then be used by your web application, e.g. to send the data to the server for storing or sending via email etc.
+                <br/><strong>Note: </strong> This forces <code>exportMode</code> to <strong>xml</strong>.
+            </li>
         </ul>
 
         <p>
@@ -61,11 +67,15 @@ include '../documentation-main/documentation_header.php';
             <li><code>customHeader</code>: If you want to put some rows at the top of the xls file, stick it here.
                 The format of this rows is specified below in the section custom rows.</li>
             <li><code>customFooter</code>: Same as customHeader, but for the end of the file.</li>
-            <li><code>sheetName</code>: The name of the sheet in excel where the grid will get exported. If not specified defaults to 'ag-grid'.</li>
+            <li><code>sheetName</code>: The name of the sheet in excel where the grid will get exported. If not specified defaults to 'ag-grid'.
+                <br/> <strong  style="font-size: 14px">Note: 31 charecters max</strong>.
+            </li>
             <li><code>suppressTextAsCDATA</code>: Since v17 the default behaviour of exporting text is to include CDATA tags to avoid any text
                 parsing issues, but if this is incompatible to you current approach, you can switch this off by setting this to true.
-                <br/>Note: Only relevant if exportMode is set to "xml".
+                <br/><strong style="font-size: 14px">Note: Only relevant if exportMode is set to "xml"</strong>.
             </li>
+            <li><code>rowHeight</code>: The height (in px) of all rows. If not specified it will take the Excel default value.</li>
+            <li><code>headerRowHeight</code>: The height (in px) of header rows. If not specified it will take the <code>rowHeight</code> value.
         </ul>
 
 
@@ -203,7 +213,7 @@ include '../documentation-main/documentation_header.php';
             <li>For groups, the first exported value (column) will always have the group key.</li>
         </ul>
 
-        <?= example('Excel Export Without Styles', 'excel-export-without-styles', 'generated', array("enterprise" => 1)) ?>
+        <?= example('Excel Export Without Styles', 'excel-export-without-styles', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
     </article>
     <article>
         <h2>Export with Styles</h2>
@@ -440,7 +450,7 @@ var gridOptions = {
             </li>
         </ul>
 
-        <?= example('Excel Export With Styles', 'excel-export-with-styles', 'generated', array("enterprise" => 1)) ?>
+        <?= example('Excel Export With Styles', 'excel-export-with-styles', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
     </article>
     <article>
         <h2> Example 3 - Data types </h2> 
@@ -457,7 +467,7 @@ var gridOptions = {
             it shows 39923. You need to add the formatting inside Excel</li>
         </ul>
 
-        <?= example('Excel Data Typs', 'excel-data-types', 'generated', array("enterprise" => 1)) ?>
+        <?= example('Excel Data Types', 'excel-data-types', 'generated', array("enterprise" => 1, "processVue" => true)) ?>
     </article>
     <article>
         <h2>Export to Excel with iPad</h2>

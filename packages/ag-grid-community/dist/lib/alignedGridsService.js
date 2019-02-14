@@ -1,6 +1,6 @@
 /**
  * ag-grid-community - Advanced Data Grid / Data Table supporting Javascript / React / AngularJS / Web Components
- * @version v19.1.1
+ * @version v20.0.0
  * @link http://www.ag-grid.com/
  * @license MIT
  */
@@ -111,7 +111,7 @@ var AlignedGridsService = /** @class */ (function () {
                 result.push(column.getColId());
             });
         }
-        else if (event.columns) {
+        else if (event.column) {
             result.push(event.column.getColId());
         }
         return result;
@@ -196,6 +196,11 @@ var AlignedGridsService = /** @class */ (function () {
                 });
                 break;
         }
+        var isVerticalScrollShowing = this.gridPanel.isVerticalScrollShowing();
+        var alignedGrids = this.gridOptionsWrapper.getAlignedGrids();
+        alignedGrids.forEach(function (grid) {
+            grid.api.setAlwaysShowVerticalScroll(isVerticalScrollShowing);
+        });
     };
     __decorate([
         context_3.Autowired('gridOptionsWrapper'),
